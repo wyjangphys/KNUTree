@@ -60,6 +60,10 @@ int KNUTree::GetGoodParticleIndex(AMSEventR* thisEvent)
     }
     else
       if( debugMode ) cerr << "1";
+    /* ECAL related cuts are removed since we don't need to require ECAL information for deuteron analysis
+     * 2016.6.9
+     */
+    /*
     pEcalShower = pParticle->pEcalShower();
     if( debugMode ) cerr << " / EcalShowerR : ";
     if( !pEcalShower )
@@ -69,6 +73,7 @@ int KNUTree::GetGoodParticleIndex(AMSEventR* thisEvent)
     }
     else
       if( debugMode ) cerr << "1";
+      */
     pTrdTrack = pParticle->pTrdTrack();
     if( !pTrdTrack )
     {
@@ -84,7 +89,10 @@ int KNUTree::GetGoodParticleIndex(AMSEventR* thisEvent)
     GoodBeta      = pBetaH->IsGoodBeta();
     TkTofMatch    = pBetaH->IsTkTofMatch();
     GoodTrTrack   = IsGoodTrTrack(pTrTrack);
-    ShowerTkMatch = IsShowerTrackMatched(pEcalShower, pTrTrack);
+    /* ECAL related cuts are removed since we don't need to require ECAL information for deuteron analysis
+     * 2016.6.9
+     */
+//    ShowerTkMatch = IsShowerTrackMatched(pEcalShower, pTrTrack);
     FidVolumeTest = IsTrackInsideEcalFiducialVolume(pTrTrack);
 
     if( debugMode ) cerr << " / Result: " << GoodBeta << TkTofMatch << GoodTrTrack << ShowerTkMatch << FidVolumeTest;
