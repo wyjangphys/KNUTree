@@ -3,6 +3,9 @@
 
 #include "amschain.h"
 #include "TrdKCluster.h"
+#include "bcorr.h"
+#include "TrSim.h"
+#include "TrExtAlignDB.h"
 #include <TChain.h>
 #include <TFile.h>
 #include <TROOT.h>
@@ -15,7 +18,7 @@ class KNUTree
   public:
     KNUTree(char* _name, int argc, char* argv[]);
     ~KNUTree();
-    char* GetName();
+    const char* GetName();
     bool SetName(char* _name);
     bool RegisterFileToChain(int argc, char* argv[], AMSChain* amsChain);
     void Init();
@@ -23,13 +26,14 @@ class KNUTree
     void Loop();
     void End();
     void End(int killarg);
+    void InitializeLoop();
 
     bool IsBadRun(AMSEventR* thisEvent);
     bool IsScienceRun(AMSEventR* thisEvent);
     bool IsHardwareStatusGood(AMSEventR* thisEvent);
     bool IsUnbiasedPhysicsTriggerEvent(AMSEventR* thisEvent);
     bool IsACCPatternGood(AMSEventR* thisEvent);
-    bool IsGoodBeta(BetaR* thisBeta);
+    bool IsGoodBeta(BetaHR* thisBeta);
     bool IsGoodLiveTime(AMSEventR* thisEvent);
     bool IsInSouthAtlanticAnomaly(AMSEventR* thisEvent);
     bool IsInSolarArrays(AMSEventR* thisEvent);
@@ -42,19 +46,38 @@ class KNUTree
   private:
     char* name;
     char* outputFileName;
-    AMSChain* pChain;
     TTree* outTree; /// TTree for output
     TFile* pOutputTFile;
     TH1F* hEvtCounter;
+    TH1F* hGoodParticleCounter;
     unsigned int nTreesInChain;   /// Number of TTree's in current AMSChain
     unsigned long int nevt;
 
   public:
+    AMSChain* pChain;
+    AMSEventR* pAMSEvent;
+    HeaderR* pHeader;
+    ParticleR* pParticle;
+    BetaHR* pBetaH;
+    TrTrackR* pTrTrack;
+    TrRecHitR* pTrRecHit;
+    TrdTrackR* pTrdTrack;
+    TrdSegmentR* pTrdSegment;
+    EcalShowerR* pEcalShower;
+    RichRingR* pRichRing;
+    TrdKCluster* pTrdKCluster;
+    TrdKHit* pTrdKHit;
+    AntiClusterR* pAntiCluster;
+
+  public:
+    bool isMC;
     unsigned int  nCut;                       // Number of cuts
-    unsigned int  nProcessed;                 // Number of processed events
+    unsigned int  nEvents;                    // Number of total events
+    unsigned int  nSelected;                  // Number of selected events
+
+    // Header informations
     unsigned int  nRun;                       // Run number
     unsigned int  nEvent;                     // Event number
-    unsigned int  nProcessedNumber;           // Number of processed events
     unsigned int  nLevel1;                    // Number of Level1 triggers
     unsigned int  nParticle;                  // Number of particles
     unsigned int  nCharge;                    // Number of charges
@@ -67,8 +90,9 @@ class KNUTree
     unsigned int  nBeta;                      // Number of successfully estimated beta(v/c) values
     unsigned int  nBetaB;                     // Number of successfully estimated beta(v/c) values with algorithm B
     unsigned int  nBetaH;                     // Number of successfully estimated beta(v/c) values with algorithm H
-    unsigned int  nShower;                    // Number of the ECAL shower objects
+    unsigned int  nEcalShower;                    // Number of the ECAL shower objects
     unsigned int  nVertex;                    // Number of vertices in this event
+
     unsigned int  particleType;               // Type of ParticleR
     float         liveTime;                   // Livetime fraction
     float         utcTime;                    // UTC time
@@ -95,7 +119,7 @@ class KNUTree
     int           isInShadow;                 // Value for check whether the AMS is in ISS solar panel shadow or not.
     float         zenithAngle;
     int           isInSAA;
-    unsigned int  ptlCharge;                  // ParticleR::Charge value
+/*    unsigned int  ptlCharge;                  // ParticleR::Charge value
     float         ptlMomentum;                // ParticleR::Momentum value
     float         ptlTheta;                   // Direction of the incoming particle (polar angle)
     float         ptlPhi;                     // Direction of the incoming particle (azimuthal angle)
@@ -111,18 +135,11 @@ class KNUTree
     float         ptlRichPathBeta[2];
     float         ptlRichLength;              // Estimated pathlength of particle within RICH radiator (cm).
     int           ptlRichParticles;
+    */
     float         ptlCutOffStoermer;
     float         ptlCutOffDipole;
-    float         ptlCutOffMax[2];
-    float         showerEnergyD;
-    float         showerEnergyDL[18];
-    float         showerEnergyE;
-    float         showerEnergyCorrected;
-    float         showerBDT;
-    float         showerCofG[3];
-    float         showerCofGDist;
-    float         showerCofGdX;
-    float         showerCofGdY;
+
+    // TOF variables
     int           tofNCluster;
     int           tofNClusterH;
     int           tofNUsedHits;
@@ -142,6 +159,22 @@ class KNUTree
     float         tofUpperCharge;
     float         tofLowerCharge;
     float         tofChargeOnLayer[4];
+    // Track related variables
+    int           isEcalAvailable;
+    float         showerEnergyD;
+    float         showerEnergyDL[18];
+    float         showerEnergyE;
+    float         showerEnergyCorrected;
+    float         showerBDT;
+    float         showerCofG[3];
+    float         showerCofGDist;
+    float         showerCofGdX;
+    float         showerCofGdY;
+    int           trkFitCodeL1Inner;
+    float         trkRigidityL1Inner;
+    float         trkRigidityInverseErrorL1Inner;
+    float         trkReducedChisquareL1InnerX;
+    float         trkReducedChisquareL1InnerY;
     int           trkFitCodeFS;
     float         trkRigidityFS;
     float         trkRigidityInverseErrorFS;
@@ -157,12 +190,14 @@ class KNUTree
     float         trkRigidityInverseErrorInner;
     float         trkReducedChisquareInnerX;
     float         trkReducedChisquareInnerY;
+    float         trkLayerJQ[9];
     int           trkEdepLayerJXSideOK[9];
     int           trkEdepLayerJYSideOK[9];
     float         trkEdepLayerJ[9];
     float         trkCharge;
     float         trkInnerCharge;
     int           trkHasExtLayers;
+    int           isRichAvailable;
     int           richRebuild;
     int           richIsGood;
     int           richIsClean;

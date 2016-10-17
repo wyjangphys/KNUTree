@@ -10,6 +10,9 @@
 #include "SlowControlLookup.hh"
 #include "TrdKCluster.h"
 #include "amschain.h"
+#include "bcorr.h"
+#include "TrSim.h"
+#include "TrExtAlignDB.h"
 
 #define KNUOUT std::cout << "[KNUTree::Loop] "
 #define KNUERR std::cerr << "[KNUTree::Loop] Error: "
@@ -17,97 +20,126 @@
 void KNUTree::Loop()
 {/*{{{*/
   KNUOUT << "Begin to loop over " << nevt << " events." << endl;
+  KNUTree::InitializeLoop();
 
-  AMSSetupR::RTI::UseLatest();
+  // Latest RTI database (pass6)
+  AMSSetupR::RTI::UseLatest(6);
+  // Latest alignment
   TkDBc::UseFinal();
+  // Disabling reading settings from file
+  TRMCFFKEY.ReadFromFile = 0;
+  TRFITFFKEY.ReadFromFile = 0;
+  TRFITFFKEY.magtemp = 0;
 
   const bool setAMSRootDefaults = true;
   AMSRootSupport amsRootSupport(AC::ISSRun, setAMSRootDefaults);
   Analysis::EventFactory& eventFactory = amsRootSupport.EventFactory();
   Analysis::AMSRootParticleFactory& particleFactory = amsRootSupport.ParticleFactory();
 
-  AMSEventR* pev = NULL;
-  HeaderR* header = NULL;
   for( unsigned long int e = 0; e < nevt; e++ )
+  //for( unsigned long int e = 0; e < 5000; e++ )
   {
-    pev = pChain->GetEvent(e);
-    header = &(pev->fHeader);
+    pAMSEvent = pChain->GetEvent(e);
+    pHeader = &(pAMSEvent->fHeader);
 
-    if( !pev ) continue;
+    if( !pAMSEvent ) continue;
     hEvtCounter->Fill(0);
-    if( this->IsBadRun(pev) ) this->End(1);
-    hEvtCounter->Fill(1);
-    if( !this->IsScienceRun(pev) ) continue;
-    hEvtCounter->Fill(2);
-    if( !this->IsHardwareStatusGood(pev) ) continue;
-    hEvtCounter->Fill(3);
-    if( this->IsUnbiasedPhysicsTriggerEvent(pev) ) continue;
-    hEvtCounter->Fill(4);
-    if( pev->nParticle() != 1 ) continue;
-    hEvtCounter->Fill(5);
-    if( !this->IsTrkAlignmentGood(pev) ) continue;
-    hEvtCounter->Fill(6);
-    int ptlIdx = this->GetGoodParticleIndex(pev);
-    if( ptlIdx == -1 ) continue;
-    hEvtCounter->Fill(7);
+    int ptlIdx;
+    if( isMC == false )
+    {
+      if( this->IsBadRun(pAMSEvent) ) this->End(1);
+      hEvtCounter->Fill(1);
+      if( !this->IsScienceRun(pAMSEvent) ) continue;
+      hEvtCounter->Fill(2);
+      //if( !this->IsHardwareStatusGood(pAMSEvent) ) continue;
+      //hEvtCounter->Fill(3);
+      if( this->IsUnbiasedPhysicsTriggerEvent(pAMSEvent) ) continue;
+      hEvtCounter->Fill(3);
+      if( pAMSEvent->nParticle() != 1 ) continue;
+      hEvtCounter->Fill(4);
+      if( !this->IsTrkAlignmentGood(pAMSEvent) ) continue;
+      hEvtCounter->Fill(5);
+      ptlIdx = this->GetGoodParticleIndex(pAMSEvent);
+      if( ptlIdx == -1 ) continue;
+      hEvtCounter->Fill(6);
+    }
+    else
+    {
+      if( this->IsBadRun(pAMSEvent) ) this->End(1);
+      hEvtCounter->Fill(1);
+      if( this->IsUnbiasedPhysicsTriggerEvent(pAMSEvent) ) continue;
+      hEvtCounter->Fill(2);
+      if( pAMSEvent->nParticle() != 1 ) continue;
+      hEvtCounter->Fill(3);
+      if( !this->IsTrkAlignmentGood(pAMSEvent) ) continue;
+      hEvtCounter->Fill(4);
+      ptlIdx = this->GetGoodParticleIndex(pAMSEvent);
+      if( ptlIdx == -1 ) continue;
+      hEvtCounter->Fill(5);
+    }
 
-    nRun            = pev->Run();
-    nEvent          = pev->Event();
-    nLevel1         = pev->nLevel1();
-    nParticle       = pev->nParticle();
-    nCharge         = pev->nCharge();
-    nTrTrack        = pev->nTrTrack();
-    nTrdTrack       = pev->nTrdTrack();
-    nAntiCluster    = pev->nAntiCluster();
-    nRichRing       = pev->nRichRing();
-    nRichRingB      = pev->nRichRingB();
-    nBeta           = pev->nBeta();
-    nBetaB          = pev->nBetaB();
-    nBetaH          = pev->nBetaH();
-    nShower         = pev->nEcalShower();
-    nVertex         = pev->nVertex();
-    liveTime        = pev->LiveTime();
-    utcTime         = (float)header->UTCTime(0);
-    orbitAltitude   = header->RadS;
-    orbitLatitude   = header->ThetaS;
-    orbitLongitude  = header->PhiS;
-    orbitLatitudeM  = header->ThetaM;
-    orbitLongitudeM = header->PhiM;
-    velR            = header->VelocityS;
-    velTheta        = header->VelTheta;
-    velPhi          = header->VelPhi;
-    yaw             = header->Yaw;
-    pitch           = header->Pitch;
-    roll            = header->Roll;
-    zenithAngle     = header->Zenith();
-    isInSAA         = pev->IsInSAA();
+    nRun            = pAMSEvent->Run();
+    nEvent          = pAMSEvent->Event();
+    nLevel1         = pAMSEvent->nLevel1();
+    nParticle       = pAMSEvent->nParticle();
+    nCharge         = pAMSEvent->nCharge();
+    nTrTrack        = pAMSEvent->nTrTrack();
+    nTrdTrack       = pAMSEvent->nTrdTrack();
+    nAntiCluster    = pAMSEvent->nAntiCluster();
+    nRichRing       = pAMSEvent->nRichRing();
+    nRichRingB      = pAMSEvent->nRichRingB();
+    nBeta           = pAMSEvent->nBeta();
+    nBetaB          = pAMSEvent->nBetaB();
+    nBetaH          = pAMSEvent->nBetaH();
+    nEcalShower     = pAMSEvent->nEcalShower();
+    nVertex         = pAMSEvent->nVertex();
 
-    double tmpglong;
-    double tmpglat;
-    gCoordCalcResult  = pev->GetGalCoo(
+    if( isMC == false )
+    {
+      liveTime        = pAMSEvent->LiveTime();
+      utcTime         = (float)pHeader->UTCTime(0);
+      orbitAltitude   = pHeader->RadS;
+      orbitLatitude   = pHeader->ThetaS;
+      orbitLongitude  = pHeader->PhiS;
+      orbitLatitudeM  = pHeader->ThetaM;
+      orbitLongitudeM = pHeader->PhiM;
+      velR            = pHeader->VelocityS;
+      velTheta        = pHeader->VelTheta;
+      velPhi          = pHeader->VelPhi;
+      yaw             = pHeader->Yaw;
+      pitch           = pHeader->Pitch;
+      roll            = pHeader->Roll;
+      zenithAngle     = pHeader->Zenith();
+      isInSAA         = pAMSEvent->IsInSAA();
+
+      double tmpglong;
+      double tmpglat;
+      gCoordCalcResult  = pAMSEvent->GetGalCoo(
         gCoordCalcResultBit,
         tmpglong,
         tmpglat);
-    gLongitude  = tmpglong;
-    gLatitude   = tmpglat;
+      gLongitude  = tmpglong;
+      gLatitude   = tmpglat;
 
-    double tmpSunPosAzimuth;
-    double tmpSunPosElevation;
-    sunPosCalcResult   = header->getSunAMS(tmpSunPosAzimuth, tmpSunPosElevation);
-    sunPosAzimuth      = tmpSunPosAzimuth;
-    sunPosElevation    = tmpSunPosElevation;
+      double tmpSunPosAzimuth;
+      double tmpSunPosElevation;
+      sunPosCalcResult   = pHeader->getSunAMS(tmpSunPosAzimuth, tmpSunPosElevation);
+      sunPosAzimuth      = tmpSunPosAzimuth;
+      sunPosElevation    = tmpSunPosElevation;
 
-    AMSPoint solarArray;
-    isInShadow         = pev->isInShadow(solarArray, 0);
-    solarArrayCoord[0] = solarArray.x();
-    solarArrayCoord[1] = solarArray.y();
-    solarArrayCoord[2] = solarArray.z();
+      AMSPoint solarArray;
+      isInShadow         = pAMSEvent->isInShadow(solarArray, 0);
+      solarArrayCoord[0] = solarArray.x();
+      solarArrayCoord[1] = solarArray.y();
+      solarArrayCoord[2] = solarArray.z();
+    }
 
-    ParticleR* pParticle = pev->pParticle(ptlIdx);
+    pParticle = pAMSEvent->pParticle(ptlIdx);
     if(!pParticle) continue;
-    ptlCharge           = (unsigned int)pParticle->Charge;
+    //ptlCharge           = (unsigned int)pParticle->Charge;
     // Unfold below to see the particle coordinates
-    ptlMomentum         = pParticle->Momentum;/*{{{*/
+    /*
+    ptlMomentum         = pParticle->Momentum;
     ptlTheta            = pParticle->Theta;
     ptlPhi              = pParticle->Phi;
     ptlCoo[0]           = pParticle->Coo[0];
@@ -193,13 +225,19 @@ void KNUTree::Loop()
     ptlRichPathBeta[1]  = pParticle->RichPathBeta[1];
     ptlRichLength       = pParticle->RichLength;
     ptlRichParticles    = pParticle->RichParticles;
+    */
     ptlCutOffStoermer   = pParticle->CutoffS;
-    ptlCutOffDipole     = pParticle->Cutoff;/*}}}*/
+    ptlCutOffDipole     = pParticle->Cutoff;
 
-    tofNCluster         = pev->nTofCluster();
-    tofNClusterH        = pev->nTofClusterH();
-    BetaHR* pBetaH       = pParticle->pBetaH();
-    //if(!pBeta) continue;
+    // 
+    //
+    // TOF Section
+    //
+    //
+    tofNCluster         = pAMSEvent->nTofCluster();
+    tofNClusterH        = pAMSEvent->nTofClusterH();
+    pBetaH              = pParticle->pBetaH();
+    if(!pBetaH) { KNUERR << "NULL pBetaH pointer! This should not be happen! Exit the program!" << std::endl; exit(1); }
     tofBeta             = pBetaH->GetBeta();
     tofInvBetaErr       = pBetaH->GetEBetaV();
     tofMass             = pBetaH->GetMass();
@@ -217,33 +255,132 @@ void KNUTree::Loop()
     tofChargeOnLayer[1] = pBetaH->GetQL(1);
     tofChargeOnLayer[2] = pBetaH->GetQL(2);
     tofChargeOnLayer[3] = pBetaH->GetQL(3);
-    for(int i = 0; i < pBetaH->NTofClusterH(); ++i)
+
+    for(int i = 0; i < 4; ++i)
     {
-      if( pBetaH->TestExistHL(i) == true )
-        tofDepositedEnergyOnLayer[i] = pBetaH->GetClusterHL(i)->GetEdep();
+      TofClusterHR* pTofClusterH = pBetaH->GetClusterHL(i);
+      if( pTofClusterH != 0 )
+      {
+        tofDepositedEnergyOnLayer[i] = pTofClusterH->GetEdep();
+      }
       else
         tofDepositedEnergyOnLayer[i] = -1;
     }
 
     int ncls[4] = {0, 0, 0, 0};
-    nTofClustersInTime  = pev->GetNTofClustersInTime(pBetaH, ncls);
+    nTofClustersInTime  = pAMSEvent->GetNTofClustersInTime(pBetaH, ncls);
 
-
-    TrTrackR* pTrTrack = pParticle->pTrTrack();
+    //
+    //
+    // Tracker Section
+    //
+    //
+    pTrTrack = pParticle->pTrTrack();
     if(!pTrTrack) continue;
-    int id_maxspan = pTrTrack->iTrTrackPar(1, 0, 20);
+    trkCharge       = pTrTrack->GetQ();
+    trkInnerCharge  = pTrTrack->GetInnerQ();
+    trkHasExtLayers = pTrTrack->HasExtLayers();
 
-    trkFitCodeMS              = id_maxspan;
-    trkRigidityMS             = pTrTrack->GetRigidity(id_maxspan);
-    trkRigidityInverseErrorMS = pTrTrack->GetErrRinv(id_maxspan);
-    trkReducedChisquareMSX    = pTrTrack->GetNormChisqX(id_maxspan);
-    trkReducedChisquareMSY    = pTrTrack->GetNormChisqY(id_maxspan);
+    int z_inn = floor(trkCharge + .5);
+    if( z_inn < 1 ) z_inn = 1;
+    float mass = TrFit::Mproton; // Proton
+    if( z_inn >= 2) mass = TrFit::Mhelium; // Helium
+    if( z_inn >= 3) mass = TrFit::Mproton*2*z_inn; // Ion Z>=3
+    int refit = 3;
+    // ISS or MC
+    bool isiss = (pAMSEvent->nMCEventg() == 0);
+    // For ISS, enable ion linearity (charge Z >= 3) and dz correction
+    if( isiss )
+    {
+      TRCLFFKEY.UseNonLinearity = 0;
+      TRFITFFKEY.Zshift = 2;
+      if( z_inn >= 3)
+        TrClusterR::SetLinearityCorrection();
+      else
+        TrClusterR::UnsetLinearityCorrection();
+      refit = 3;
+    }
+    // MC Smearing and Refit
+    else
+    {
+      TrExtAlignDB::SmearExtAlign();
+      TRCLFFKEY.UseSensorAlign = 0;
+      TRFITFFKEY.Zshift = -1;
+      refit = 3;
+    }
+    int mfit = pTrTrack->iTrTrackPar(1, 5, 20+refit, mass, z_inn);
+    float rigidity = 0;
+    if( mfit >= 0 )
+    {
+      if( isiss ) rigidity = pTrTrack->GetCorrectedRigidity(mfit);
+      else rigidity = pTrTrack->GetRigidity(mfit);
+      // Magnet temperature correction for ISS pass4
+      float bcor = pTrTrack->GetBcorr(mfit); // positive
+      if( isiss && bcor == 1 )
+      { // Not applied
+        float bcor1 = 1, bcor2 = 1;
+        int bret1 = MagnetVarp::btempcor(bcor1, 0, 1);
+        int bret2 = MagnetVarp::btempcor(bcor2, 0, 2);
+        if( bret1 == 0 && bret2 == 0 ) bcor = ( bcor1 + bcor2 ) / 2;
+        else if( bret1 != 0 && bret2 == 0 ) bcor = bcor2;
+        rigidity *= bcor;
+      }
+    }
 
-    int id_inner = pTrTrack->iTrTrackPar(1, 3, 20);
+    trkFitCodeL1Inner              = mfit;
+    trkRigidityL1Inner             = rigidity;
+    trkRigidityInverseErrorL1Inner = pTrTrack->GetErrRinv(trkFitCodeL1Inner);
+    trkReducedChisquareL1InnerX    = pTrTrack->GetNormChisqX(trkFitCodeL1Inner);
+    trkReducedChisquareL1InnerY    = pTrTrack->GetNormChisqY(trkFitCodeL1Inner);
+
+    int id_maxspan = pTrTrack->iTrTrackPar(1, 0, 20+refit, mass, z_inn);
+    if( id_maxspan >= 0 )
+    {
+      if( isiss ) trkRigidityMS = pTrTrack->GetCorrectedRigidity(id_maxspan);
+      else trkRigidityMS = pTrTrack->GetRigidity(id_maxspan);
+      // Magnet temperature correction for ISS pass4
+      float bcor = pTrTrack->GetBcorr(id_maxspan); // positive
+      if( isiss && bcor == 1 )
+      {
+        float bcor1 = 1, bcor2 = 1;
+        int bret1 = MagnetVarp::btempcor(bcor1, 0, 1);
+        int bret2 = MagnetVarp::btempcor(bcor2, 0, 2);
+        if( bret1 == 0 && bret2 == 0 ) bcor = ( bcor1 + bcor2 ) / 2;
+        else if( bret1 != 0 && bret2 == 0 ) bcor = bcor2;
+        trkRigidityMS *= bcor;
+      }
+      trkFitCodeMS              = id_maxspan;
+      trkRigidityInverseErrorMS = pTrTrack->GetErrRinv(id_maxspan);
+      trkReducedChisquareMSX    = pTrTrack->GetNormChisqX(id_maxspan);
+      trkReducedChisquareMSY    = pTrTrack->GetNormChisqY(id_maxspan);
+    }
+    else
+    {
+      trkFitCodeMS              = id_maxspan;
+      trkRigidityMS             = -99999.;
+      trkRigidityInverseErrorMS = -99999.;
+      trkReducedChisquareMSX    = -99999.;
+      trkReducedChisquareMSY    = -99999.;
+    }
+
+
+    int id_inner = pTrTrack->iTrTrackPar(1, 3, 20+refit, mass, z_inn);
     if( id_inner >= 0 )
     {
+      if( isiss ) trkRigidityInner = pTrTrack->GetCorrectedRigidity(id_inner);
+      else trkRigidityInner = pTrTrack->GetRigidity(id_inner);
+      // Magnet temperature correction for ISS pass4
+      float bcor = pTrTrack->GetBcorr(id_inner); // positive
+      if( isiss && bcor == 1 )
+      {
+        float bcor1 = 1, bcor2 = 1;
+        int bret1 = MagnetVarp::btempcor(bcor1, 0, 1);
+        int bret2 = MagnetVarp::btempcor(bcor2, 0, 2);
+        if( bret1 == 0 && bret2 == 0 ) bcor = ( bcor1 + bcor2 ) / 2;
+        else if( bret1 != 0 && bret2 == 0 ) bcor = bcor2;
+        trkRigidityInner *= bcor;
+      }
       trkFitCodeInner              = id_inner;
-      trkRigidityInner             = pTrTrack->GetRigidity(id_inner);
       trkRigidityInverseErrorInner = pTrTrack->GetErrRinv(id_inner);
       trkReducedChisquareInnerX    = pTrTrack->GetNormChisqX(id_inner);
       trkReducedChisquareInnerY    = pTrTrack->GetNormChisqY(id_inner);
@@ -258,12 +395,16 @@ void KNUTree::Loop()
     }
 
 
-    TrRecHitR* pTrRecHit = NULL;
-    for(int ii = 0; ii < 9; ii++) trkEdepLayerJ[ii] = 0.;
+    for(int ii = 0; ii < 9; ii++)
+    {
+      trkLayerJQ[ii] = 0.;
+      trkEdepLayerJ[ii] = 0.;
+    }
 
     for( int ilayer = 0; ilayer <9; ilayer++)
     {
-      pTrRecHit = pTrTrack->GetHitLJ(ilayer);
+      trkLayerJQ[ilayer] = pTrTrack->GetLayerJQ(ilayer+1);
+      pTrRecHit = pTrTrack->GetHitLJ(ilayer+1);
       if( !pTrRecHit )
       {
         trkEdepLayerJXSideOK[ilayer] = -1;
@@ -278,30 +419,18 @@ void KNUTree::Loop()
         trkEdepLayerJ[ilayer] += pTrRecHit->GetEdep(0) + pTrRecHit->GetEdep(1);
       }
     }
-    trkCharge       = pTrTrack->GetQ();
-    trkInnerCharge  = pTrTrack->GetInnerQ();
-    trkHasExtLayers = pTrTrack->HasExtLayers();
 
-    TrdTrackR* pTrdTrack = pParticle->pTrdTrack();
-    //if( !pTrdTrack ) continue;
-
-    // Initialize ECAL shower related variables
-    showerEnergyD         = -1;
-    for(int i = 0; i < 18; ++i) showerEnergyDL[i] = 0;
-    showerEnergyE         = -1;
-    showerEnergyCorrected = -1;
-    showerBDT             = -1;
-    showerCofG[0]         = -99;
-    showerCofG[1]         = -99;
-    showerCofG[2]         = -99;
-    showerCofGDist        = -99;
-    showerCofGdX          = -99;
-    showerCofGdY          = -99;
+    //
+    //
+    // ECAL shower Section
+    //
+    //
 
     // Save ECAL shower related variables in case of EcalShowerR object exists.
     EcalShowerR* pEcalShower = pParticle->pEcalShower();
     if( pEcalShower )
     {
+      isEcalAvailable = 1;
       showerEnergyCorrected = pEcalShower->GetCorrectedEnergy(2, 2);
       if( showerEnergyCorrected < 0.5 ) continue;
       showerEnergyD = (pEcalShower->EnergyD)/1000.;
@@ -335,7 +464,7 @@ void KNUTree::Loop()
     particleFactory.SetAMSBetaHR(pBetaH);
 
     if( !amsRootSupport.SwitchToSpecificTrackFitById(id_maxspan) ) continue;
-    Analysis::Event& event = amsRootSupport.BuildEvent(pChain, pev);
+    Analysis::Event& event = amsRootSupport.BuildEvent(pChain, pAMSEvent);
 
     // Only do this if you need access to TRD segments/tracks and vertices
     eventFactory.PerformTrdTracking(event);
@@ -363,61 +492,38 @@ void KNUTree::Loop()
     trdPHeliumToProtonLogLikelihoodRatio   = particle->CalculateHeliumProtonLikelihood();
     trdPHeliumToElectronLogLikelihoodRatio = particle->CalculateHeliumElectronLikelihood();
 
-    RichRingR* richRing = pParticle->pRichRing();
-    if(!richRing)
+    pRichRing = pParticle->pRichRing();
+    if( pRichRing )
     {
-      richRebuild               = -1;
-      richIsGood                = -1;
-      richIsClean               = -1;
-      richIsNaF                 = -1;
-      richRingWidth             = -1;
-      richUsedHits              = -1;
-      richNHits                 = -1;
-      richNPMTsOnRing           = -1;
-      richBeta                  = -1;
-      richBetaError             = -1;
-      richChargeSquared         = -1;
-      richKolmogorovProbability = -1;
-      richPhotoelectrons        = -1;
-      richExpectedPhotoelectrons = -1;
-      richTheta                 = -9;
-      richPhi                   = -9;
-    }
-    else
-    {
-      richRebuild                = (int)richRing->Rebuild();
-      richIsGood                 = (int)richRing->IsGood();
-      richIsClean                = (int)richRing->IsClean();
-      richIsNaF                  = (int)richRing->IsNaF();
-      richUsedHits               = (int)richRing->getUsedHits();
-      richRingWidth              = (float)richRing->RingWidth();
-      richNHits                  = richRing->getHits();
-      richNPMTsOnRing            = richRing->getPMTs();
-      richBeta                   = richRing->getBeta();
-      richBetaError              = richRing->getBetaError();
-      richChargeSquared          = richRing->getCharge2Estimate();
-      richKolmogorovProbability  = richRing->getProb();
-      richPhotoelectrons         = richRing->getPhotoElectrons();
-      richExpectedPhotoelectrons = richRing->getExpectedPhotoelectrons();
-      richTheta                  = richRing->getTrackTheta();
-      richPhi                    = richRing->getTrackPhi();
+      isRichAvailable            = 1;
+      richRebuild                = (int)pRichRing->Rebuild();
+      richIsGood                 = (int)pRichRing->IsGood();
+      richIsClean                = (int)pRichRing->IsClean();
+      richIsNaF                  = (int)pRichRing->IsNaF();
+      richUsedHits               = (int)pRichRing->getUsedHits();
+      richRingWidth              = (float)pRichRing->RingWidth();
+      richNHits                  = pRichRing->getHits();
+      richNPMTsOnRing            = pRichRing->getPMTs();
+      richBeta                   = pRichRing->getBeta();
+      richBetaError              = pRichRing->getBetaError();
+      richChargeSquared          = pRichRing->getCharge2Estimate();
+      richKolmogorovProbability  = pRichRing->getProb();
+      richPhotoelectrons         = pRichRing->getPhotoElectrons();
+      richExpectedPhotoelectrons = pRichRing->getExpectedPhotoelectrons();
+      richTheta                  = pRichRing->getTrackTheta();
+      richPhi                    = pRichRing->getTrackPhi();
     }
 
-    TrdTrackR* trdTrack = pParticle->pTrdTrack();
-    if(!trdTrack) continue;
-    trdNClusters = pev->nTrdCluster();
+    pTrdTrack = pParticle->pTrdTrack();
     int trdNUsedHits = 0;
-    int trdNUsedSegment = trdTrack->NTrdSegment();
-    for(int i = 0; i < trdNUsedSegment; i++)
+    int trdNUsedSegment = 0;
+    if(!pTrdTrack)
     {
-      TrdSegmentR* pTrdSegment = trdTrack->pTrdSegment(i);
-      trdNUsedHits += pTrdSegment->NTrdCluster();
-    }
-    trdNUnusedHits = trdNClusters - trdNUsedHits;
-
-    trdNTracks  = pev->nTrdTrack();
-    if(!trdTrack)
-    {
+      trdNClusters = -1;
+      trdNUsedHits = -1;
+      trdNUsedSegment = -1;
+      trdNUsedHits = -1;
+      trdNTracks = -1;
       trdTrackTheta     = -9.;
       trdTrackPhi       = -9.;
       trdTrackPattern   = -9;
@@ -426,19 +532,29 @@ void KNUTree::Loop()
     }
     else
     {
-      trdTrackTheta   = trdTrack->Theta;
-      trdTrackPhi     = trdTrack->Phi;
-      trdTrackPattern = trdTrack->Pattern;
-      trdTrackCharge  = trdTrack->Q;
-      trdTrackChi2    = trdTrack->Chi2;
+      trdNClusters = pAMSEvent->nTrdCluster();
+      trdNUsedSegment = pTrdTrack->NTrdSegment();
+      for(int i = 0; i < trdNUsedSegment; i++)
+      {
+        pTrdSegment = pTrdTrack->pTrdSegment(i);
+        trdNUsedHits += pTrdSegment->NTrdCluster();
+      }
+      trdNUnusedHits = trdNClusters - trdNUsedHits;
+
+      trdNTracks  = pAMSEvent->nTrdTrack();
+      trdTrackTheta   = pTrdTrack->Theta;
+      trdTrackPhi     = pTrdTrack->Phi;
+      trdTrackPattern = pTrdTrack->Pattern;
+      trdTrackCharge  = pTrdTrack->Q;
+      trdTrackChi2    = pTrdTrack->Chi2;
       trdTrackMeanDepositedEnergy = 0.;
       int ntrdlayers = 0;
-      for(int i = 0; i < trdTrack->NTrdSegment(); i++)
+      for(int i = 0; i < pTrdTrack->NTrdSegment(); i++)
       {
-        for(int j = 0; j < trdTrack->pTrdSegment(i)->NTrdCluster(); j++)
+        for(int j = 0; j < pTrdTrack->pTrdSegment(i)->NTrdCluster(); j++)
         {
-          int trdLayer = trdTrack->pTrdSegment(i)->pTrdCluster(j)->Layer;
-          float trdEdep = trdTrack->pTrdSegment(i)->pTrdCluster(j)->EDep;
+          int trdLayer  = pTrdTrack->pTrdSegment(i)->pTrdCluster(j)->Layer;
+          float trdEdep = pTrdTrack->pTrdSegment(i)->pTrdCluster(j)->EDep;
           trdTrackEdepL[trdLayer] = trdEdep;
           trdTrackTotalDepositedEnergy += trdEdep;
           ntrdlayers++;
@@ -448,41 +564,25 @@ void KNUTree::Loop()
     }
 
     // Below of this for TrdK
-    trdKNRawHits                                = -1;
-    trdKIsReadAlignmentOK                       = -1;
-    trdKIsReadCalibOK                           = -1;
-    trdKNHits                                   = -1;
-    trdKIsValid                                 = -1;
-    trdKElectronToProtonLogLikelihoodRatio      = -1;
-    trdKHeliumToElectronLogLikelihoodRatio      = -1;
-    trdKHeliumToProtonLogLikelihoodRatio        = -1;
-    trdKCharge                                  = -1;
-    trdKChargeError                             = -1;
-    trdKNUsedHitsForCharge                      = -1;
-    for(int k = 0; k < 20; k++) trdKAmpLayer[k] = -1;
-    trdKTotalPathLength                         = -1;
-    trdKElectronLikelihood                      = -1;
-    trdKProtonLikelihood                        = -1;
-    trdKHeliumLikelihood                        = -1;
 
-    trdKNRawHits = pev->NTrdRawHit();
+    trdKNRawHits = pAMSEvent->NTrdRawHit();
     if(trdKNRawHits > 0)
     {
       double trdKLikelihoodRatio[3] = {-1., -1., -1.};
       double trdKLikelihood[3]      = {-1., -1., -1.};
 
-      TrdKCluster* trdK = new TrdKCluster(pev, pTrTrack, id_maxspan);
-      if(!trdK) continue;
+      pTrdKCluster = new TrdKCluster(pAMSEvent, pTrTrack, id_maxspan);
+      if(!pTrdKCluster) continue;
 
-      trdKIsReadAlignmentOK = trdK->IsReadAlignmentOK;
-      trdKIsReadCalibOK     = trdK->IsReadCalibOK;
-      trdKIsValid           = trdK->GetLikelihoodRatio_TrTrack(15, trdKLikelihoodRatio, trdKLikelihood, trdKNHits, trdKTotalPathLength, trdKTotalAmp, -1, 0);
+      trdKIsReadAlignmentOK = pTrdKCluster->IsReadAlignmentOK;
+      trdKIsReadCalibOK     = pTrdKCluster->IsReadCalibOK;
+      trdKIsValid           = pTrdKCluster->GetLikelihoodRatio_TrTrack(15, trdKLikelihoodRatio, trdKLikelihood, trdKNHits, trdKTotalPathLength, trdKTotalAmp, -1, 0);
       if(trdKIsValid != 0 && trdKNHits != 0)
       {
-        trdK->CalculateTRDCharge();
-        trdKCharge                              = trdK->GetTRDCharge();
-        trdKChargeError                         = trdK->GetTRDChargeError();
-        trdKNUsedHitsForCharge                  = trdK->GetQTRDHitCollectionNuclei().size();
+        pTrdKCluster->CalculateTRDCharge();
+        trdKCharge                              = pTrdKCluster->GetTRDCharge();
+        trdKChargeError                         = pTrdKCluster->GetTRDChargeError();
+        trdKNUsedHitsForCharge                  = pTrdKCluster->GetQTRDHitCollectionNuclei().size();
         trdKElectronToProtonLogLikelihoodRatio  = trdKLikelihoodRatio[0];
         trdKHeliumToElectronLogLikelihoodRatio  = trdKLikelihoodRatio[1];
         trdKHeliumToProtonLogLikelihoodRatio    = trdKLikelihoodRatio[2];
@@ -492,35 +592,37 @@ void KNUTree::Loop()
 
         AMSPoint trExtraP0;
         AMSDir   trExtraDir;
-        trdK->GetTrTrackExtrapolation(trExtraP0, trExtraDir);
+        pTrdKCluster->GetTrTrackExtrapolation(trExtraP0, trExtraDir);
 
-        for(int l = 0; l < trdK->NHits(); l++)
+        for(int l = 0; l < pTrdKCluster->NHits(); l++)
         {
-          TrdKHit* trdKHit = trdK->GetHit(l);
+          TrdKHit* pTrdKHit = pTrdKCluster->GetHit(l);
           int tmpL = 0;
-          tmpL = trdKHit->TRDHit_Layer;
+          tmpL = pTrdKHit->TRDHit_Layer;
           float tmpAmp = 0;
-          tmpAmp = trdKHit->TRDHit_Amp;
+          tmpAmp = pTrdKHit->TRDHit_Amp;
           float tmpPathLength = 0;
-          tmpPathLength = trdKHit->Tube_Track_3DLength(&trExtraP0, &trExtraDir);
+          tmpPathLength = pTrdKHit->Tube_Track_3DLength(&trExtraP0, &trExtraDir);
 
           if( tmpAmp < 15 || tmpPathLength <= 0 ) continue;
-          if( trdKHit->IsAligned == 0 || trdKHit->IsCalibrated == 0 ) continue;
+          if( pTrdKHit->IsAligned == 0 || pTrdKHit->IsCalibrated == 0 ) continue;
           trdKAmpLayer[tmpL] += tmpAmp;
         }
       }
+      delete pTrdKCluster;
     }
 
     // The following code lines are about ACC
 
-    pev->RebuildAntiClusters();
-    accNHits = pev->nAntiCluster();
+    /*
+    pAMSEvent->RebuildAntiClusters();
+    accNHits = pAMSEvent->nAntiCluster();
 
     if( accNHits != 0 )
     {
       for( int i = 0; i < accNHits; ++i)
       {
-        AntiClusterR* anti = pev->pAntiCluster(i);
+        AntiClusterR* anti = pAMSEvent->pAntiCluster(i);
         if( !anti ) continue;
         if( anti->Edep != 0 )
           accEdep.push_back(anti->Edep);
@@ -529,13 +631,6 @@ void KNUTree::Loop()
         accTime.push_back(anti->time);
       }
     }
-
-
-    if( e % 100000 == 0 || e == nevt - 1 )
-      KNUOUT << "Processed " << e << " out of " << nevt << " (" << (float)e/nevt*100. << "%)" << endl;
-
-    nProcessedNumber = nProcessed;
-    outTree->Fill();
 
     accSector.clear();
     accTime.clear();
@@ -548,10 +643,18 @@ void KNUTree::Loop()
     accUnfoldedHitPosZfromADC.clear();
     accEdep.clear();
     accTimePG.clear();
+    */
 
-    nProcessed++;
-    hEvtCounter->Fill(8);
-  }
+    if( e % 100000 == 0 || e == nevt - 1 )
+      KNUOUT << "Processed " << e << " out of " << nevt << " (" << (float)e/nevt*100. << "%)" << endl;
+
+    nSelected++;
+    outTree->Fill();
+    if( isMC == false )
+      hEvtCounter->Fill(7);
+    else
+      hEvtCounter->Fill(6);
+  } // End of the Loop
 }/*}}}*/
 
 /**

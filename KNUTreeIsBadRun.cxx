@@ -19,10 +19,10 @@ bool KNUTree::IsBadRun(AMSEventR* event)
     KNUERR << "Reason: The run is contained in the region from 1307125541 to 1307218054" << std::endl;
     return true;
   }
-  else if( runNumber == 132119816 )
+  else if( runNumber == 1321198167 )
   {
     KNUERR << "The program is aborted since the current run: " << runNumber << " is a bad run(3)." << std::endl;
-    KNUERR << "Reason: The run 132119816 is a bad run." << std::endl;
+    KNUERR << "Reason: The run 1321198167 is a bad run." << std::endl;
     return true;
   }
   else if( event->isBadRun( runNumber ) )

@@ -9,29 +9,19 @@
 
 #include <iostream>
 #include <ctime>
-
-#include "amschain.h"
-
-#include <TROOT.h>
-#include <TUnixSystem.h>
-#include <TChain.h>
-#include <TStyle.h>
-#include <TApplication.h>
-#include <TString.h>
-#include <TCanvas.h>
-#include <TFile.h>
-#include <TTree.h>
+#include <root.h>
 
 #include "KNUTree.h"
 
 int main(int argc, char* argv[])
 {
-  KNUOUT << "This is KNU standard AMS analysis template program." << std::endl;
-  KNUERR << "Test for console error out." << std::endl;
+  KNUOUT << "This is KNU standard AMS analysis template code." << std::endl;
 
   KNUTree knuTree("KNUTree", argc, argv);
   knuTree.Begin();
   knuTree.Init();
   knuTree.Loop();
   knuTree.End();
+
+  return 0;
 }

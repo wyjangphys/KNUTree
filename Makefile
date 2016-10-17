@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS = -W -Wall -Wno-write-strings -Wno-extra -Wno-unused-parameter -Wno-unknown-pragmas -DAMS_ACQT_INTERFACE -D_PGTRACK_ -Wno-unused-variable -Wno-extra
+CXXFLAGS = -W -Wall -Wno-write-strings -Wno-extra -Wno-unused-parameter -Wno-unknown-pragmas -DAMS_ACQT_INTERFACE -D_PGTRACK_ -Wno-unused-variable -Wno-extra -Wno-unused-function
 
 # AMS Global Environment
 CVMFS_AMS_OFFLINE = /cvmfs/ams.cern.ch/Offline
@@ -90,3 +90,28 @@ clean :
 	rm -rf main.o
 	rm -rf KNUTree.o
 	rm -rf KNUTreeLoop.o
+	rm -rf KNUTreeIsBadRun.o
+	rm -rf KNUTreeGetGoodParticleIndex.o
+	rm -rf KNUTreeIsACCPatternGood.o
+	rm -rf KNUTreeIsGoodBeta.o
+	rm -rf KNUTreeIsGoodTrTrack.o
+	rm -rf KNUTreeIsHardwareStatusGood.o
+	rm -rf KNUTreeIsScienceRun.o
+	rm -rf KNUTreeIsShowerTrackMatched.o
+	rm -rf KNUTreeIsTrackInsideEcalFiducialVolume.o
+	rm -rf KNUTreeIsTrkAlignmentGood.o
+	rm -rf KNUTreeIsUnbiasedPhysicsTriggerEvent.o
+# DO NOT DELETE
+#KNUTree.o: KNUTree.cxx KNUTree.h
+#KNUTreeLoop.o: KNUTreeLoop.cxx KNUTree.h
+#KNUTreeIsBadRun.o: KNUTreeIsBadRun.cxx KNUTree.h
+#KNUTreeGetGoodParticleIndex.o: KNUTreeGetGoodParticleIndex.cxx KNUTree.h
+#KNUTreeIsACCPatternGood.o: KNUTreeIsACCPatternGood.cxx KNUTree.h
+#KNUTreeIsGoodBeta.o: KNUTreeIsGoodBeta.cxx KNUTree.h
+#KNUTreeIsGoodTrTrack.o: KNUTreeIsGoodTrTrack.cxx KNUTree.h
+#KNUTreeIsHardwareStatusGood.o: KNUTreeIsHardwareStatusGood.cxx KNUTree.h
+#KNUTreeIsScienceRun.o: KNUTreeIsScienceRun.cxx KNUTree.h
+#KNUTreeIsShowerTrackMatched.o: KNUTreeIsShowerTrackMatched.cxx KNUTree.h
+#KNUTreeIsTrackInsideEcalFiducialVolume.o: KNUTreeIsTrackInsideEcalFiducialVolume.cxx KNUTree.h
+#KNUTreeIsTrkAlignmentGood.o: KNUTreeIsTrkAlignmentGood.cxx KNUTree.h
+#KNUTreeIsUnbiasedPhysicsTriggerEvent.o: KNUTreeIsUnbiasedPhysicsTriggerEvent.cxx KNUTree.h
