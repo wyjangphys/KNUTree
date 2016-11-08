@@ -6,7 +6,7 @@
  */
 bool KNUTree::IsGoodTrTrack(TrTrackR* thisTrack)
 {/*{{{*/
-  bool debugMode = true;
+  bool debugMode = false;
   if( !thisTrack )
   {
     if( debugMode ) cerr << "No track pointer. Reject it." << endl;
@@ -144,14 +144,14 @@ bool KNUTree::IsGoodTrTrack(TrTrackR* thisTrack)
     }
   }
 
-  if( !yside[1] ) { if( debugMode ) { KNUERR << "No hit on layer 2" << endl; } return false; }
+  if( !yside[1]               ) { if( debugMode ){ KNUERR << "No hit on layer 2" << endl;   } return false; }
   if( !(yside[2] || yside[3]) ) { if( debugMode ){ KNUERR << "No hit on layer 3/4" << endl; } return false; }
   if( !(yside[4] || yside[5]) ) { if( debugMode ){ KNUERR << "No hit on layer 5/6" << endl; } return false; }
   if( !(yside[6] || yside[7]) ) { if( debugMode ){ KNUERR << "No hit on layer 7/8" << endl; } return false; }
-  if( !(xside[0] && yside[0]) ) { if( debugMode ){ KNUERR << "No L1X & L1Y hit" << endl; } return false; }
+  if( !(xside[0] && yside[0]) ) { if( debugMode ){ KNUERR << "No L1X & L1Y hit" << endl;    } return false; }
   float l1inner_chi2y = thisTrack->GetNormChisqY( id_l1inner );
   float inner_chi2y   = thisTrack->GetNormChisqY( id_inner );
-  if( !( l1inner_chi2y < 10 && l1inner_chi2y - inner_chi2y < 10 ) ) { if( debugMode ){ KNUERR << "Chisquare in condition does not fitted." << endl; } return false; }
+  if( !( l1inner_chi2y < 10 && l1inner_chi2y - inner_chi2y < 10 ) ) { if( debugMode ){ KNUERR << "Chisquare value is out of range." << endl; } return false; }
 
   /*
   bool hitOnLayerJ[9];
@@ -162,7 +162,7 @@ bool KNUTree::IsGoodTrTrack(TrTrackR* thisTrack)
   if( !(hitOnLayerJ[6] || hitOnLayerJ[7]) ) { if( debugMode ){cerr << "No hit on layer 6/7 " << endl;} return false; }
   */
 
-  // Reject events with rigidity less than 0.5 GV
+  // Reject events with rigidity less than 0.05 GV
   if( thisTrack->GetRigidity(id_l1inner) < 0.05 ) return false;
 
   return true;

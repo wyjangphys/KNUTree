@@ -26,11 +26,14 @@ bool KNUTree::IsGoodBeta(BetaHR* thisBeta)
     if( debugMode ) KNUERR << "This event has beta less than 0.4." << endl;
     return false;
   }
+
+  /*
   if( thisBeta->GetBuildType() != 1 )
   {
     if( debugMode ) KNUERR << "This event doesn't have BuildType = 1." << endl;
     return false;
   }
+  */
 
   return true;
 }

@@ -24,9 +24,11 @@ class KNUTree
     void Init();
     void Begin();
     void Loop();
+    void LoopMultiPtl();
     void End();
     void End(int killarg);
-    void InitializeLoop();
+    void InitLoop();
+    void InitParticle();
 
     bool IsBadRun(AMSEventR* thisEvent);
     bool IsScienceRun(AMSEventR* thisEvent);
@@ -42,31 +44,31 @@ class KNUTree
     bool IsTrackInsideEcalFiducialVolume(TrTrackR* thisTrack);
     bool IsTrkAlignmentGood(AMSEventR* thisEvent);
     int GetGoodParticleIndex(AMSEventR* thisEvent);
+    std::vector<int> GetGoodParticles(AMSEventR* thisEvent);
 
   private:
-    char* name;
-    char* outputFileName;
-    TTree* outTree; /// TTree for output
-    TFile* pOutputTFile;
-    TH1F* hEvtCounter;
-    TH1F* hGoodParticleCounter;
-    unsigned int nTreesInChain;   /// Number of TTree's in current AMSChain
-    unsigned long int nevt;
+    char*         name;
+    char*         outputFileName;
+    TTree*        outTree; /// TTree for output
+    TFile*        pOutputTFile;
+    TH1F*         hEvtCounter;
+    TH1F*         hGoodParticleCounter;
+    unsigned int  nTreesInChain;   /// Number of TTree's in current AMSChain
 
   public:
-    AMSChain* pChain;
-    AMSEventR* pAMSEvent;
-    HeaderR* pHeader;
-    ParticleR* pParticle;
-    BetaHR* pBetaH;
-    TrTrackR* pTrTrack;
-    TrRecHitR* pTrRecHit;
-    TrdTrackR* pTrdTrack;
-    TrdSegmentR* pTrdSegment;
-    EcalShowerR* pEcalShower;
-    RichRingR* pRichRing;
-    TrdKCluster* pTrdKCluster;
-    TrdKHit* pTrdKHit;
+    AMSChain*     pChain;
+    AMSEventR*    pAMSEvent;
+    HeaderR*      pHeader;
+    ParticleR*    pParticle;
+    BetaHR*       pBetaH;
+    TrTrackR*     pTrTrack;
+    TrRecHitR*    pTrRecHit;
+    TrdTrackR*    pTrdTrack;
+    TrdSegmentR*  pTrdSegment;
+    EcalShowerR*  pEcalShower;
+    RichRingR*    pRichRing;
+    TrdKCluster*  pTrdKCluster;
+    TrdKHit*      pTrdKHit;
     AntiClusterR* pAntiCluster;
 
   public:
@@ -77,7 +79,7 @@ class KNUTree
 
     // Header informations
     unsigned int  nRun;                       // Run number
-    unsigned int  nEvent;                     // Event number
+    unsigned long int  nEvent;                     // Event number
     unsigned int  nLevel1;                    // Number of Level1 triggers
     unsigned int  nParticle;                  // Number of particles
     unsigned int  nCharge;                    // Number of charges
@@ -92,6 +94,15 @@ class KNUTree
     unsigned int  nBetaH;                     // Number of successfully estimated beta(v/c) values with algorithm H
     unsigned int  nEcalShower;                    // Number of the ECAL shower objects
     unsigned int  nVertex;                    // Number of vertices in this event
+    std::vector<int> iGoodParticleContainer;
+    int           particleID;
+    int           trkID;
+    int           parentID;
+    float         genPosition[3];
+    float         genDirCosine[3];
+    float         genMass;
+    float         genCharge;
+    float         genMomentum;                // Rigidity of particle at the time of MC particle generation.
 
     unsigned int  particleType;               // Type of ParticleR
     float         liveTime;                   // Livetime fraction
@@ -194,6 +205,11 @@ class KNUTree
     int           trkEdepLayerJXSideOK[9];
     int           trkEdepLayerJYSideOK[9];
     float         trkEdepLayerJ[9];
+    float         trkPosXLJ[9];
+    float         trkPosYLJ[9];
+    float         trkPosZLJ[9];
+    float         trkDirThetaLJ[9];
+    float         trkDirPhiLJ[9];
     float         trkCharge;
     float         trkInnerCharge;
     int           trkHasExtLayers;

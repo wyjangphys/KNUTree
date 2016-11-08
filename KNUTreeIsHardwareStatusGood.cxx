@@ -18,7 +18,8 @@ bool KNUTree::IsHardwareStatusGood(AMSEventR* thisEvent)
     if(error) goodHW &= false;
   }
 
-  if( goodHW == false ) KNUERR << "Event: " << thisEvent->Event() << " has bad HW status." << endl;
+  if( goodHW == false ){ KNUERR << "Event: " << thisEvent->Event() << " has bad HW status." << endl; }
+
   return goodHW;
 }/*}}}*/
 

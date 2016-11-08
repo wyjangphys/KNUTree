@@ -20,7 +20,8 @@ int main(int argc, char* argv[])
   KNUTree knuTree("KNUTree", argc, argv);
   knuTree.Begin();
   knuTree.Init();
-  knuTree.Loop();
+  //knuTree.Loop();
+  knuTree.LoopMultiPtl();
   knuTree.End();
 
   return 0;
