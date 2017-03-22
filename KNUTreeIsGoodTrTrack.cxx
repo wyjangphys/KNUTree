@@ -47,6 +47,7 @@ bool KNUTree::IsGoodTrTrack(TrTrackR* thisTrack)
   }
 
   // 1. THE EVENT SHOULD HAVE L1 + INNER PATTERN TRACK
+  /*
   int id_l1inner = thisTrack->iTrTrackPar(1, 5, 20 + refit, mass, z_inn);
   if( id_l1inner < 0 )
   {
@@ -66,7 +67,6 @@ bool KNUTree::IsGoodTrTrack(TrTrackR* thisTrack)
   }
 
 
-  /*
   if( id_fullspan < 0 )
   {
     if( debugMode == true )
@@ -148,10 +148,11 @@ bool KNUTree::IsGoodTrTrack(TrTrackR* thisTrack)
   if( !(yside[2] || yside[3]) ) { if( debugMode ){ KNUERR << "No hit on layer 3/4" << endl; } return false; }
   if( !(yside[4] || yside[5]) ) { if( debugMode ){ KNUERR << "No hit on layer 5/6" << endl; } return false; }
   if( !(yside[6] || yside[7]) ) { if( debugMode ){ KNUERR << "No hit on layer 7/8" << endl; } return false; }
-  if( !(xside[0] && yside[0]) ) { if( debugMode ){ KNUERR << "No L1X & L1Y hit" << endl;    } return false; }
-  float l1inner_chi2y = thisTrack->GetNormChisqY( id_l1inner );
+  //if( !(xside[0] && yside[0]) ) { if( debugMode ){ KNUERR << "No L1X & L1Y hit" << endl;    } return false; }
   float inner_chi2y   = thisTrack->GetNormChisqY( id_inner );
-  if( !( l1inner_chi2y < 10 && l1inner_chi2y - inner_chi2y < 10 ) ) { if( debugMode ){ KNUERR << "Chisquare value is out of range." << endl; } return false; }
+  float inner_chi2x   = thisTrack->GetNormChisqX( id_inner );
+  if( inner_chi2y < 10 ) return false;
+  if( inner_chi2x < 10 ) return false;
 
   /*
   bool hitOnLayerJ[9];
@@ -163,7 +164,7 @@ bool KNUTree::IsGoodTrTrack(TrTrackR* thisTrack)
   */
 
   // Reject events with rigidity less than 0.05 GV
-  if( thisTrack->GetRigidity(id_l1inner) < 0.05 ) return false;
+  //if( thisTrack->GetRigidity(id_l1inner) < 0.05 ) return false;
 
   return true;
 }/*}}}*/

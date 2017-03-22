@@ -21,7 +21,7 @@ bool KNUTree::IsGoodBeta(BetaHR* thisBeta)
   bool debugMode = false;
   if( !thisBeta ) return false;
 
-  if( thisBeta->GetBeta() < 0.4 )
+  if( fabs( thisBeta->GetBeta() ) < 0.4 )
   {
     if( debugMode ) KNUERR << "This event has beta less than 0.4." << endl;
     return false;

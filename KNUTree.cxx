@@ -25,9 +25,11 @@ KNUTree::KNUTree(char* _name, int argc, char* argv[])
   pChain = new AMSChain();
   RegisterFileToChain(argc, argv, pChain);
 
-  nEvents             = 0;
+  nEvents             = pChain->GetEntries();
   nCut                = 0;
+  nExaminedParticles  = 0;
   nSelected           = 0;
+  nSelectedParticles  = 0;
   nRun                = 0;
   nEvent              = 0;
   nLevel1             = 0;
@@ -77,6 +79,7 @@ KNUTree::KNUTree(char* _name, int argc, char* argv[])
   sunPosElevation     = 0;
   sunPosCalcResult    = 0;
   unixTime            = 0;
+  acEventTime         = 0.;
   solarArrayCoord[0]  = 0;
   solarArrayCoord[1]  = 0;
   solarArrayCoord[2]  = 0;
@@ -227,31 +230,50 @@ KNUTree::KNUTree(char* _name, int argc, char* argv[])
   tofEstimatedChargeOnLayer[2] = 0;
   tofEstimatedChargeOnLayer[3] = 0;
   tofCharge = 0;
+  tofChargeRMS = 0;
   tofUpperCharge = 0;
   tofLowerCharge = 0;
+  tofAcCharge = 0;
+  tofAcUpperCharge = 0;
+  tofAcLowerCharge = 0;
   tofChargeOnLayer[0] = 0;
   tofChargeOnLayer[1] = 0;
   tofChargeOnLayer[2] = 0;
   tofChargeOnLayer[3] = 0;
-  trkFitCodeL1Inner = 0;
-  trkRigidityL1Inner = 0;
-  trkRigidityInverseErrorL1Inner = 0;
-  trkReducedChisquareL1InnerX = 0;
-  trkReducedChisquareL1InnerY = 0;
-  trkFitCodeFS = 0;
-  trkRigidityFS = 0;
-  trkRigidityInverseErrorFS = 0;
-  trkReducedChisquareFSX = 0;
-  trkReducedChisquareFSY = 0;
-  trkFitCodeMS = 0;
-  trkRigidityMS = 0;
-  trkRigidityInverseErrorMS = 0;
-  trkReducedChisquareMSY = 0;
-  trkReducedChisquareMSX = 0;
-  trkFitCodeInner = 0;
-  trkRigidityInverseErrorInner = 0;
-  trkReducedChisquareInnerX = 0;
-  trkReducedChisquareInnerY = 0;
+  trkFitCodeL1Inner = -1;
+  trkRigidityL1Inner = -9999;
+  trkRigidityInverseErrorL1Inner = -9999;
+  trkReducedChisquareL1InnerX = -9999;
+  trkReducedChisquareL1InnerY = -9999;
+  trkFitCodeL9Inner = -1;
+  trkRigidityL9Inner = -9999;
+  trkRigidityInverseErrorL9Inner = -9999;
+  trkReducedChisquareL9InnerX = -9999;
+  trkReducedChisquareL9InnerY = -9999;
+  trkFitCodeUpperInner = -1;
+  trkRigidityUpperInner = -9999;
+  trkRigidityInverseErrorUpperInner = -9999;
+  trkReducedChisquareUpperInnerX = -9999;
+  trkReducedChisquareUpperInnerY = -9999;
+  trkFitCodeLowerInner = -1;
+  trkRigidityLowerInner = -9999;
+  trkRigidityInverseErrorLowerInner = -9999;
+  trkReducedChisquareLowerInnerX = -9999;
+  trkReducedChisquareLowerInnerY = -9999;
+  trkFitCodeFS = -1;
+  trkRigidityFS = -9999;
+  trkRigidityInverseErrorFS = -9999;
+  trkReducedChisquareFSX = -9999;
+  trkReducedChisquareFSY = -9999;
+  trkFitCodeMS = -1;
+  trkRigidityMS = -9999;
+  trkRigidityInverseErrorMS = -9999;
+  trkReducedChisquareMSY = -9999;
+  trkReducedChisquareMSX = -9999;
+  trkFitCodeInner = -1;
+  trkRigidityInverseErrorInner = -9999;
+  trkReducedChisquareInnerX = -9999;
+  trkReducedChisquareInnerY = -9999;
   trkLayerJQ[0] = 0;
   trkLayerJQ[1] = 0;
   trkLayerJQ[2] = 0;
@@ -321,6 +343,7 @@ KNUTree::KNUTree(char* _name, int argc, char* argv[])
   trdNClusters = 0;
   trdNUnusedHits = 0;
   trdNTracks = 0;
+  trdNVertex = 0;
   trdTrackPhi = 0;
   trdTrackTheta = 0;
   trdTrackChi2 = 0;
@@ -346,26 +369,6 @@ KNUTree::KNUTree(char* _name, int argc, char* argv[])
   trdTrackEdepL[17] = 0;
   trdTrackEdepL[18] = 0;
   trdTrackEdepL[19] = 0;
-  trdDepositedEnergyOnLayer[0] = 0;
-  trdDepositedEnergyOnLayer[1] = 0;
-  trdDepositedEnergyOnLayer[2] = 0;
-  trdDepositedEnergyOnLayer[3] = 0;
-  trdDepositedEnergyOnLayer[4] = 0;
-  trdDepositedEnergyOnLayer[5] = 0;
-  trdDepositedEnergyOnLayer[6] = 0;
-  trdDepositedEnergyOnLayer[7] = 0;
-  trdDepositedEnergyOnLayer[8] = 0;
-  trdDepositedEnergyOnLayer[9] = 0;
-  trdDepositedEnergyOnLayer[10] = 0;
-  trdDepositedEnergyOnLayer[11] = 0;
-  trdDepositedEnergyOnLayer[12] = 0;
-  trdDepositedEnergyOnLayer[13] = 0;
-  trdDepositedEnergyOnLayer[14] = 0;
-  trdDepositedEnergyOnLayer[15] = 0;
-  trdDepositedEnergyOnLayer[16] = 0;
-  trdDepositedEnergyOnLayer[17] = 0;
-  trdDepositedEnergyOnLayer[18] = 0;
-  trdDepositedEnergyOnLayer[19] = 0;
   trdTrackMeanDepositedEnergy = 0;
   trdTrackTotalDepositedEnergy = 0;
   trdQtNActiveLayer = 0;
@@ -416,7 +419,15 @@ KNUTree::KNUTree(char* _name, int argc, char* argv[])
   trdPElectronToProtonLogLikelihoodRatio = 0;
   trdPHeliumToElectronLogLikelihoodRatio = 0;
   trdPHeliumToProtonLogLikelihoodRatio = 0;
-  // Default initialization
+  trdPElectronLikelihood = 0;
+  trdPProtonLikelihood = 0;
+  trdPHeliumLikelihood = 0;
+  trdPNHybridHits = 0;
+  trdPNActiveLayers = 0;
+  trdPNLowAdcHits = 0;
+  trdPNLowDxHits = 0;
+  acTrackerTrdTrackDistanceAtTrdCenterInSigmas = 0;
+  acTrackerTrdTrackAngularDistanceInSigmas = 0;
 }/*}}}*/
 
 /**
@@ -426,10 +437,10 @@ KNUTree::~KNUTree()
 {/*{{{*/
   delete[] name;
   delete pChain;
-  delete hEvtCounter;
+  //delete hEvtCounter;     // <<< This line causes segmentation violation. Don't know why.
   delete pOutputTFile;
   delete[] outputFileName;
-  delete outTree;
+  //delete outTree;         // <<< This line cuases segmentation violation. Don't know why.
 }/*}}}*/
 
 /**
@@ -481,15 +492,27 @@ bool KNUTree::RegisterFileToChain(int argc, char* argv[], AMSChain* amsChain)
    *     ./a.out <list file which contains list of files to be analyzed> <output file> ( argc == 3 )
    */
 
-  char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1308865423.00000001.root";
+  //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1366261348.00000001.root";  // Bad run example
+  //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1362134524.00000001.root";
+  //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1308865423.00000001.root";
   //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1307005643.00000001.root";   // Path of test run
-  //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1323051106.00000001.root";   // Path of test run
+  char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1323051106.00000001.root";   // Path of test run
   //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/MC/AMS02/2014/d.B1030/d.pl1.0_520_GG_Blic/872728226.00000001.root";
   char inputFileName[256];      // File path for single run. (Cat 3.)
 
   if( argc == 1 )
   {
     KNUOUT << "RUN MODE : Single Test Run (Cat. 1)" << std::endl;
+    if( skirmishRunPath[31] == 'M' )
+    {
+        isMC = true;
+        KNUOUT << "==== THE PROGRAM IS RUNNING AS MONTE CARLO MODE ====" << std::endl;
+    }
+    else
+    {
+        isMC = false;
+        KNUOUT << "==== THE PROGRAM IS RUNNING AS ISS DATA PROCESSING MODE ====" << std::endl;
+    }
 
     if( amsChain->Add(skirmishRunPath) != 1 )
     {
@@ -541,10 +564,15 @@ bool KNUTree::RegisterFileToChain(int argc, char* argv[], AMSChain* amsChain)
     char* line_p;                 // Character pointer to filter out CRLF at the end of each line.
     while( fgets( inputFileName, 256, fp ) != NULL )
     {
-      if( inputFileName[31] == 'M' )
+      if( inputFileName[31] == 'M' ) // If the 32-th character of the file path is 'M' then it is MC run.
       {
         isMC = true;
         KNUOUT << "==== THE PROGRAM IS RUNNING AS MONTE CARLO MODE ====" << std::endl;
+      }
+      else
+      {
+        isMC = false;
+        KNUOUT << "==== THE PROGRAM IS RUNNING AS ISS DATA PROCESSING MODE ====" << std::endl;
       }
       if( ( line_p = strchr(inputFileName, '\n') ) != NULL ) // Search \n
         *line_p = 0;  // Filter out \n at the end of lines.
@@ -587,7 +615,7 @@ bool KNUTree::RegisterFileToChain(int argc, char* argv[], AMSChain* amsChain)
 }/*}}}*/
 
 /**
- * @brief 
+ * @brief  This function initializes all variables relavant to this analysis.
  * @return
  */
 void KNUTree::Init()
@@ -596,7 +624,9 @@ void KNUTree::Init()
 
   nEvents             = pChain->GetEntries();
   nCut                = 0;
+  nExaminedParticles  = 0;
   nSelected           = 0;
+  nSelectedParticles  = 0;
   nRun                = 0;
   nEvent              = 0;
   nLevel1             = 0;
@@ -647,6 +677,7 @@ void KNUTree::Init()
   sunPosElevation     = 0;
   sunPosCalcResult    = 0;
   unixTime            = 0;
+  acEventTime         = 0;
   solarArrayCoord[0]  = 0;
   solarArrayCoord[1]  = 0;
   solarArrayCoord[2]  = 0;
@@ -796,41 +827,50 @@ void KNUTree::Init()
   tofEstimatedChargeOnLayer[1] = 0;
   tofEstimatedChargeOnLayer[2] = 0;
   tofEstimatedChargeOnLayer[3] = 0;
-  tofCharge = 0;
-  tofUpperCharge = 0;
-  tofLowerCharge = 0;
-  tofChargeOnLayer[0] = 0;
-  tofChargeOnLayer[1] = 0;
-  tofChargeOnLayer[2] = 0;
-  tofChargeOnLayer[3] = 0;
-  trkFitCodeL1Inner = 0;
-  trkRigidityL1Inner = 0;
-  trkRigidityInverseErrorL1Inner = 0;
-  trkReducedChisquareL1InnerX = 0;
-  trkReducedChisquareL1InnerY = 0;
-  trkFitCodeFS = 0;
-  trkRigidityFS = 0;
-  trkRigidityInverseErrorFS = 0;
-  trkReducedChisquareFSX = 0;
-  trkReducedChisquareFSY = 0;
-  trkFitCodeMS = 0;
-  trkRigidityMS = 0;
-  trkRigidityInverseErrorMS = 0;
-  trkReducedChisquareMSY = 0;
-  trkReducedChisquareMSX = 0;
-  trkFitCodeInner = 0;
-  trkRigidityInverseErrorInner = 0;
-  trkReducedChisquareInnerX = 0;
-  trkReducedChisquareInnerY = 0;
-  trkLayerJQ[0] = 0;
-  trkLayerJQ[1] = 0;
-  trkLayerJQ[2] = 0;
-  trkLayerJQ[3] = 0;
-  trkLayerJQ[4] = 0;
-  trkLayerJQ[5] = 0;
-  trkLayerJQ[6] = 0;
-  trkLayerJQ[7] = 0;
-  trkLayerJQ[8] = 0;
+  tofCharge = -1;
+  tofChargeRMS = 0;
+  tofUpperCharge = -1;
+  tofLowerCharge = -1;
+  tofChargeOnLayer[0] = -1;
+  tofChargeOnLayer[1] = -1;
+  tofChargeOnLayer[2] = -1;
+  tofChargeOnLayer[3] = -1;
+  trkFitCodeL1Inner = -1;
+  trkRigidityL1Inner = -9999;
+  trkRigidityInverseErrorL1Inner = -9999;
+  trkReducedChisquareL1InnerX = -9999;
+  trkReducedChisquareL1InnerY = -9999;
+  trkFitCodeFS = -1;
+  trkRigidityFS = -9999;
+  trkRigidityInverseErrorFS = -9999;
+  trkReducedChisquareFSX = -9999;
+  trkReducedChisquareFSY = -9999;
+  trkFitCodeMS = -1;
+  trkRigidityMS = -9999;
+  trkRigidityInverseErrorMS = -9999;
+  trkReducedChisquareMSY = -9999;
+  trkReducedChisquareMSX = -9999;
+  trkFitCodeInner = -1;
+  trkRigidityInverseErrorInner = -9999;
+  trkReducedChisquareInnerX = -9999;
+  trkReducedChisquareInnerY = -9999;
+  trkFitCodeUpperInner = -1;
+  trkRigidityInverseErrorUpperInner = -9999;
+  trkReducedChisquareUpperInnerX = -9999;
+  trkReducedChisquareUpperInnerY = -9999;
+  trkFitCodeLowerInner = -1;
+  trkRigidityInverseErrorLowerInner = -9999;
+  trkReducedChisquareLowerInnerX = -9999;
+  trkReducedChisquareLowerInnerY = -9999;
+  trkLayerJQ[0] = -1;
+  trkLayerJQ[1] = -1;
+  trkLayerJQ[2] = -1;
+  trkLayerJQ[3] = -1;
+  trkLayerJQ[4] = -1;
+  trkLayerJQ[5] = -1;
+  trkLayerJQ[6] = -1;
+  trkLayerJQ[7] = -1;
+  trkLayerJQ[8] = -1;
   trkEdepLayerJXSideOK[0] = 0;
   trkEdepLayerJXSideOK[1] = 0;
   trkEdepLayerJXSideOK[2] = 0;
@@ -866,13 +906,22 @@ void KNUTree::Init()
     trkDirThetaLJ[i] = 0;
     trkDirPhiLJ[i] = 0;
   }
-  trkCharge = 0;
-  trkInnerCharge = 0;
+  trkCharge = -1;
+  trkInnerCharge = -1;
   trkHasExtLayers = 0;
+  isRichAvailable = 0;
   richRebuild = 0;
   richIsGood = 0;
   richIsClean = 0;
   richIsNaF = 0;
+  richTileIndex = -1;
+  richDistanceTileBorder = -1;
+  richChargeCorrections = 0;
+  richPMTCorrectionsFailed = -10;
+  richWidth = -1;
+  richBetaConsistency = -999;
+  richReflectedHits = -1;
+  richPMTChargeConsistency = -999;
   richUsedHits = 0;
   richRingWidth = 0;
   richNHits = 0;
@@ -888,9 +937,12 @@ void KNUTree::Init()
   richNUsedHits = 0;
   richTheta = 0;
   richPhi = 0;
+  richTrackerTrackOnRadiatorX = -999;
+  richTrackerTrackOnRadiatorY = -999;
   trdNClusters = 0;
   trdNUnusedHits = 0;
   trdNTracks = 0;
+  trdNVertex = 0;
   trdTrackPhi = 0;
   trdTrackTheta = 0;
   trdTrackChi2 = 0;
@@ -916,28 +968,13 @@ void KNUTree::Init()
   trdTrackEdepL[17] = 0;
   trdTrackEdepL[18] = 0;
   trdTrackEdepL[19] = 0;
-  trdDepositedEnergyOnLayer[0] = 0;
-  trdDepositedEnergyOnLayer[1] = 0;
-  trdDepositedEnergyOnLayer[2] = 0;
-  trdDepositedEnergyOnLayer[3] = 0;
-  trdDepositedEnergyOnLayer[4] = 0;
-  trdDepositedEnergyOnLayer[5] = 0;
-  trdDepositedEnergyOnLayer[6] = 0;
-  trdDepositedEnergyOnLayer[7] = 0;
-  trdDepositedEnergyOnLayer[8] = 0;
-  trdDepositedEnergyOnLayer[9] = 0;
-  trdDepositedEnergyOnLayer[10] = 0;
-  trdDepositedEnergyOnLayer[11] = 0;
-  trdDepositedEnergyOnLayer[12] = 0;
-  trdDepositedEnergyOnLayer[13] = 0;
-  trdDepositedEnergyOnLayer[14] = 0;
-  trdDepositedEnergyOnLayer[15] = 0;
-  trdDepositedEnergyOnLayer[16] = 0;
-  trdDepositedEnergyOnLayer[17] = 0;
-  trdDepositedEnergyOnLayer[18] = 0;
-  trdDepositedEnergyOnLayer[19] = 0;
   trdTrackMeanDepositedEnergy = 0;
   trdTrackTotalDepositedEnergy = 0;
+  trdTrackDeviationXWithInnerTrk = 0;
+  trdTrackDeviationYWithInnerTrk = 0;
+  trdTrackDistanceBetweenInnerTrk = 0;
+  ResidualXBetweenInnerTrackAndSplineTrack = -9999;
+  ResidualYBetweenInnerTrackAndSplineTrack = -9999;
   trdQtNActiveLayer = 0;
   trdQtIsCalibrationGood = 0;
   trdQtIsInsideTrdGeometricalAcceptance = 0;
@@ -956,7 +993,7 @@ void KNUTree::Init()
   trdKElectronToProtonLogLikelihoodRatio = 0;
   trdKHeliumToElectronLogLikelihoodRatio = 0;
   trdKHeliumToProtonLogLikelihoodRatio = 0;
-  trdKCharge = 0;
+  trdKCharge = -1;
   trdKChargeError = 0;
   trdKNUsedHitsForCharge = 0;
   trdKAmpLayer[0] = 0;
@@ -986,6 +1023,15 @@ void KNUTree::Init()
   trdPElectronToProtonLogLikelihoodRatio = 0;
   trdPHeliumToElectronLogLikelihoodRatio = 0;
   trdPHeliumToProtonLogLikelihoodRatio = 0;
+  trdPElectronLikelihood = 0;
+  trdPProtonLikelihood = 0;
+  trdPHeliumLikelihood = 0;
+  trdPNHybridHits = 0;
+  trdPNActiveLayers = 0;
+  trdPNLowAdcHits = 0;
+  trdPNLowDxHits = 0;
+  acTrackerTrdTrackDistanceAtTrdCenterInSigmas = 0;
+  acTrackerTrdTrackAngularDistanceInSigmas = 0;
   accNHits = 0;
   accNRecoClPG = 0;
   accSector.clear();
@@ -1051,6 +1097,7 @@ void KNUTree::Init()
     outTree->Branch("sunPosElevation",                         &sunPosElevation,                         "sunPosElevation/F");
     outTree->Branch("sunPosCalcResult",                        &sunPosCalcResult,                        "sunPosCalcResult/I");
     outTree->Branch("unixTime",                                &unixTime,                                "unixTime/i");
+    outTree->Branch("acEventTime",                             &acEventTime,                             "acEventTime/F");
     outTree->Branch("solarArrayCoord",                         &solarArrayCoord,                         "solarArrayCoord[3]/F");
     outTree->Branch("isInShadow",                              &isInShadow,                              "isInShadow/I");
     outTree->Branch("zenithAngle",                             &zenithAngle,                             "zenithAngle/F");
@@ -1103,29 +1150,54 @@ void KNUTree::Init()
   outTree->Branch("tofDepositedEnergyOnLayer",               &tofDepositedEnergyOnLayer,               "tofDepositedEnergyOnLayer[4]/F");
   outTree->Branch("tofEstimatedChargeOnLayer",               &tofEstimatedChargeOnLayer,               "tofEstimatedChargeOnLayer[4]/F");
   outTree->Branch("tofCharge",                               &tofCharge,                               "tofCharge/F");
-  outTree->Branch("tofUpperCharge",                          &tofUpperCharge,                          "tofUpperCharge/F");
-  outTree->Branch("tofLowerCharge",                          &tofLowerCharge,                          "tofLowerCharge/F");
+  outTree->Branch("tofChargeRMS",                            &tofChargeRMS,                            "tofChargeRMS/F");
+  outTree->Branch("tofAcCharge",                             &tofAcCharge,                             "tofAcCharge/F");
+  outTree->Branch("tofAcUpperCharge",                        &tofAcUpperCharge,                        "tofAcUpperCharge/F");
+  outTree->Branch("tofAcLowerCharge",                        &tofAcLowerCharge,                        "tofAcLowerCharge/F");
   outTree->Branch("tofChargeOnLayer",                        &tofChargeOnLayer,                        "tofChargeOnLayer[4]/F");
+
   outTree->Branch("trkFitCodeFS",                            &trkFitCodeFS,                            "trkFitCodeFS/I");
   outTree->Branch("trkRigidityFS",                           &trkRigidityFS,                           "trkRigidityFS/F");
   outTree->Branch("trkRigidityInverseErrorFS",               &trkRigidityInverseErrorFS,               "trkRigidityInverseErrorFS/F");
   outTree->Branch("trkReducedChisquareFSX",                  &trkReducedChisquareFSX,                  "trkReducedChisquareFSX/F");
   outTree->Branch("trkReducedChisquareFSY",                  &trkReducedChisquareFSY,                  "trkReducedChisquareFSY/F");
+
   outTree->Branch("trkFitCodeL1Inner",                       &trkFitCodeL1Inner,                       "trkFitCodeL1Inner/I");
   outTree->Branch("trkRigidityL1Inner",                      &trkRigidityL1Inner,                      "trkRigidityL1Inner/F");
   outTree->Branch("trkRigidityInverseErrorL1Inner",          &trkRigidityInverseErrorL1Inner,          "trkRigidityInverseErrorL1Inner/F");
   outTree->Branch("trkReducedChisquareL1InnerX",             &trkReducedChisquareL1InnerX,             "trkReducedChisquareL1InnerX/F");
   outTree->Branch("trkReducedChisquareL1InnerY",             &trkReducedChisquareL1InnerY,             "trkReducedChisquareL1InnerY/F");
+
+  outTree->Branch("trkFitCodeL9Inner",                       &trkFitCodeL9Inner,                       "trkFitCodeL9Inner/I");
+  outTree->Branch("trkRigidityL9Inner",                      &trkRigidityL9Inner,                      "trkRigidityL9Inner/F");
+  outTree->Branch("trkRigidityInverseErrorL9Inner",          &trkRigidityInverseErrorL9Inner,          "trkRigidityInverseErrorL9Inner/F");
+  outTree->Branch("trkReducedChisquareL9InnerX",             &trkReducedChisquareL9InnerX,             "trkReducedChisquareL9InnerX/F");
+  outTree->Branch("trkReducedChisquareL9InnerY",             &trkReducedChisquareL9InnerY,             "trkReducedChisquareL9InnerY/F");
+
+  outTree->Branch("trkFitCodeUpperInner",                    &trkFitCodeUpperInner,                    "trkFitCodeUpperInner/I");
+  outTree->Branch("trkRigidityUpperInner",                   &trkRigidityUpperInner,                   "trkRigidityUpperInner/F");
+  outTree->Branch("trkRigidityInverseErrorUpperInner",       &trkRigidityInverseErrorUpperInner,       "trkRigidityInverseErrorUpperInner/F");
+  outTree->Branch("trkReducedChisquareUpperInnerX",          &trkReducedChisquareUpperInnerX,          "trkReducedChisquareUpperInnerX/F");
+  outTree->Branch("trkReducedChisquareUpperInnerY",          &trkReducedChisquareUpperInnerY,          "trkReducedChisquareUpperInnerY/F");
+
+  outTree->Branch("trkFitCodeLowerInner",                    &trkFitCodeLowerInner,                    "trkFitCodeLowerInner/I");
+  outTree->Branch("trkRigidityLowerInner",                   &trkRigidityLowerInner,                   "trkRigidityLowerInner/F");
+  outTree->Branch("trkRigidityInverseErrorLowerInner",       &trkRigidityInverseErrorLowerInner,       "trkRigidityInverseErrorLowerInner/F");
+  outTree->Branch("trkReducedChisquareLowerInnerX",          &trkReducedChisquareLowerInnerX,          "trkReducedChisquareLowerInnerX/F");
+  outTree->Branch("trkReducedChisquareLowerInnerY",          &trkReducedChisquareLowerInnerY,          "trkReducedChisquareLowerInnerY/F");
+
   outTree->Branch("trkFitCodeMS",                            &trkFitCodeMS,                            "trkFitCodeMS/I");
   outTree->Branch("trkRigidityMS",                           &trkRigidityMS,                           "trkRigidityMS/F");
   outTree->Branch("trkRigidityInverseErrorMS",               &trkRigidityInverseErrorMS,               "trkRigidityInverseErrorMS/F");
   outTree->Branch("trkReducedChisquareMSX",                  &trkReducedChisquareMSX,                  "trkReducedChisquareMSX/F");
   outTree->Branch("trkReducedChisquareMSY",                  &trkReducedChisquareMSY,                  "trkReducedChisquareMSY/F");
+
   outTree->Branch("trkFitCodeInner",                         &trkFitCodeInner,                         "trkFitCodeInner/I");
   outTree->Branch("trkRigidityInner",                        &trkRigidityInner,                        "trkRigidityInner/F");
   outTree->Branch("trkRigidityInverseErrorInner",            &trkRigidityInverseErrorInner,            "trkRigidityInverseErrorInner/F");
   outTree->Branch("trkReducedChisquareInnerX",               &trkReducedChisquareInnerX,               "trkReducedChisquareInnerX/F");
   outTree->Branch("trkReducedChisquareInnerY",               &trkReducedChisquareInnerY,               "trkReducedChisquareInnerY/F");
+
   outTree->Branch("trkLayerJQ",                              &trkLayerJQ,                              "trkLayerJQ[9]/F");
   outTree->Branch("trkEdepLayerJXSideOK",                    &trkEdepLayerJXSideOK,                    "trkEdepLayerJXSideOK[9]/I");
   outTree->Branch("trkEdepLayerJYSideOK",                    &trkEdepLayerJYSideOK,                    "trkEdepLayerJYSideOK[9]/I");
@@ -1138,12 +1210,19 @@ void KNUTree::Init()
   outTree->Branch("trkCharge",                               &trkCharge,                               "trkCharge/F");
   outTree->Branch("trkInnerCharge",                          &trkInnerCharge,                          "trkInnerCharge/F");
   outTree->Branch("trkHasExtLayers",                         &trkHasExtLayers,                         "trkHasExtLayers/F");
+  outTree->Branch("isRichAvailable",                         &isRichAvailable,                         "isRichAvailable/I");
   outTree->Branch("richRebuild",                             &richRebuild,                             "richRebuild/I");
   outTree->Branch("richIsGood",                              &richIsGood,                              "richIsGood/I");
   outTree->Branch("richIsClean",                             &richIsClean,                             "richIsClean/I");
   outTree->Branch("richIsNaF",                               &richIsNaF,                               "richIsNaF/I");
+  outTree->Branch("richTileIndex",                           &richTileIndex,                           "richTileIndex/I");
+  outTree->Branch("richDistanceTileBorder",                  &richDistanceTileBorder,                  "richDistanceTileBorder/F");
+  outTree->Branch("richChargeCorrections",                   &richChargeCorrections,                   "richChargeCorrections/I");
+  outTree->Branch("richPMTCorrectionsFailed",                &richPMTCorrectionsFailed,                "richPMTCorrectionsFailed/I");
+  outTree->Branch("richTrackEmissionPoint",                  &richTrackEmissionPoint,                  "richTrackEmissionPoint[5]/F");
   outTree->Branch("richUsedHits",                            &richUsedHits,                            "richUsedHits/I");
   outTree->Branch("richRingWidth",                           &richRingWidth,                           "richRingWidth/F");
+  outTree->Branch("richWidth",                               &richWidth,                               "richRingWidth/F");
   outTree->Branch("richNHits",                               &richNHits,                               "richNHits/I");
   outTree->Branch("richNPMTsOnRing",                         &richNPMTsOnRing,                         "richNPMTsOnRing/I");
   outTree->Branch("richBeta",                                &richBeta,                                "richBeta/F");
@@ -1154,18 +1233,28 @@ void KNUTree::Init()
   outTree->Branch("richExpectedPhotoelectrons",              &richExpectedPhotoelectrons,              "richExpectedPhotoelectrons/F");
   outTree->Branch("richTheta",                               &richTheta,                               "richTheta/F");
   outTree->Branch("richPhi",                                 &richPhi,                                 "richPhi/F");
+  outTree->Branch("richBetaConsistency",                     &richBetaConsistency,                     "richBetaConsistency/F");
+  outTree->Branch("richReflectedHits",                       &richReflectedHits,                       "richReflectedHits/I");
+  outTree->Branch("richPMTChargeConsistency",                &richPMTChargeConsistency,                "richPMTChargeConsistency/F");
+  outTree->Branch("richTrackerTrackOnRadiatorX",             &richTrackerTrackOnRadiatorX,             "richTrackerTrackOnRadiatorX/F");
+  outTree->Branch("richTrackerTrackOnRadiatorY",             &richTrackerTrackOnRadiatorY,             "richTrackerTrackOnRadiatorY/F");
   outTree->Branch("trdNClusters",                            &trdNClusters,                            "trdNClusters/I");
   outTree->Branch("trdNUnusedHits",                          &trdNUnusedHits,                          "trdNUnusedHits/I");
   outTree->Branch("trdNTracks",                              &trdNTracks,                              "trdNTracks/I");
+  outTree->Branch("trdNVertex",                              &trdNVertex,                              "trdNVertex/I");
   outTree->Branch("trdTrackTheta",                           &trdTrackTheta,                           "trdTrackTheta/F");
   outTree->Branch("trdTrackPhi",                             &trdTrackPhi,                             "trdTrackPhi/F");
   outTree->Branch("trdTrackChi2",                            &trdTrackChi2,                            "trdTrackChi2/F");
   outTree->Branch("trdTrackPattern",                         &trdTrackPattern,                         "trdTrackPattern/I");
   outTree->Branch("trdTrackCharge",                          &trdTrackCharge,                          "trdTrackCharge/F");
   outTree->Branch("trdTrackEdepL",                           &trdTrackEdepL,                           "trdTrackEdepL[20]/F");
-  outTree->Branch("trdDepositedEnergyOnLayer",               &trdDepositedEnergyOnLayer,               "trdDepositedEnergyOnLayer[2]/F");
   outTree->Branch("trdTrackMeanDepositedEnergy",             &trdTrackMeanDepositedEnergy,             "trdTrackMeanDepositedEnergy/F");
   outTree->Branch("trdTrackTotalDepositedEnergy",            &trdTrackTotalDepositedEnergy,            "trdTrackTotalDepositedEnergy/F");
+  outTree->Branch("trdTrackDeviationXWithInnerTrk",          &trdTrackDeviationXWithInnerTrk,          "trdTrackDeviationXWithInnerTrk/F");
+  outTree->Branch("trdTrackDeviationYWithInnerTrk",          &trdTrackDeviationYWithInnerTrk,          "trdTrackDeviationYWithInnerTrk/F");
+  outTree->Branch("trdTrackDistanceBetweenInnerTrk",         &trdTrackDistanceBetweenInnerTrk,         "trdTrackDistanceBetweenInnerTrk/F");
+  outTree->Branch("ResidualXBetweenInnerTrackAndSplineTrack",&ResidualXBetweenInnerTrackAndSplineTrack,"ResidualXBetweenInnerTrackAndSplineTrack/F");
+  outTree->Branch("ResidualYBetweenInnerTrackAndSplineTrack",&ResidualYBetweenInnerTrackAndSplineTrack,"ResidualYBetweenInnerTrackAndSplineTrack/F");
   /*
   outTree->Branch("trdQtNActiveLayer",                       &trdQtNActiveLayer,                       "trdQtNActiveLayer/I");
   outTree->Branch("trdQtIsCalibrationGood",                  &trdQtIsCalibrationGood,                  "trdQtIsCalibrationGood/I");
@@ -1199,6 +1288,15 @@ void KNUTree::Init()
   outTree->Branch("trdPElectronToProtonLogLikelihoodRatio",  &trdPElectronToProtonLogLikelihoodRatio,  "trdPElectronToProtonLogLikelihoodRatio/F");
   outTree->Branch("trdPHeliumToElectronLogLikelihoodRatio",  &trdPHeliumToElectronLogLikelihoodRatio,  "trdPHeliumToElectronLogLikelihoodRatio/F");
   outTree->Branch("trdPHeliumToProtonLogLikelihoodRatio",    &trdPHeliumToProtonLogLikelihoodRatio,    "trdPHeliumToProtonLogLikelihoodRatio/F");
+  outTree->Branch("trdPElectronLikelihood",                  &trdPElectronLikelihood,                  "trdPElectronLikelihood/F");
+  outTree->Branch("trdPProtonLikelihood",                    &trdPProtonLikelihood,                    "trdPProtonLikelihood/F");
+  outTree->Branch("trdPHeliumLikelihood",                    &trdPHeliumLikelihood,                    "trdPHeliumLikelihood/F");
+  outTree->Branch("trdPNHybridHits",                         &trdPNHybridHits,                         "trdPNHybridHits/I");
+  outTree->Branch("trdPNActiveLayers",                       &trdPNActiveLayers,                       "trdPNActiveLayers/I");
+  outTree->Branch("trdPNLowAdcHits",                         &trdPNLowAdcHits,                         "trdPNLowAdcHits/I");
+  outTree->Branch("trdPNLowDxHits",                          &trdPNLowDxHits,                          "trdPNLowDxHits/I");
+  outTree->Branch("acTrackerTrdTrackDistanceAtTrdCenterInSigmas", &acTrackerTrdTrackDistanceAtTrdCenterInSigmas, "acTrackerTrdTrackDistanceAtTrdCenterInSigmas/F");
+  outTree->Branch("acTrackerTrdTrackAngularDistanceInSigmas", &acTrackerTrdTrackAngularDistanceInSigmas, "acTrackerTrdTrackAngularDistanceInSigmas/F");
 //  outTree->Branch("accNHits",                                &accNHits,                                "accNHits/I");
 //  outTree->Branch("accNRecoClPG", &accNRecoClPG, "accNRecoClPG/I");
 //  outTree->Branch("accSector", &accSector);
@@ -1218,11 +1316,18 @@ void KNUTree::Init()
 }/*}}}*/
 
 /**
- * @brief 
+ * @brief  This function do some preparation of the beginning process. 1. Bad run check., 2. Initialize TFile instance for output., 3. Initialize event counting histogram.
  * @return
  */
 void KNUTree::Begin()
 {/*{{{*/
+  KNUOUT << "Checking bad run: " << endl;
+  if( this->IsBadRun(pChain) ) this->End(1);
+  if( isMC == false )
+  {
+    KNUOUT << "Checking science run: " << endl;
+    if( !this->IsScienceRun(pChain) ) this->End(2);
+  }
   KNUOUT << "Output file name: " << outputFileName << endl;
   pOutputTFile = new TFile(outputFileName, "RECREATE");
   outTree = new TTree("KNUTree", "KNUTree");
@@ -1277,7 +1382,6 @@ void KNUTree::End()
   pOutputTFile->Close();
   KNUOUT << "The program exited successfully" << std::endl << std::endl;
   KNUOUT << nEvents << " events were analyzed and " << nSelected << " events are selected" << std::endl;
-  exit(0);
 }/*}}}*/
 
 /**
@@ -1286,8 +1390,12 @@ void KNUTree::End()
  */
 void KNUTree::End(int killarg)
 {/*{{{*/
-  KNUOUT << "Finalizing due to kill sign..." << std::endl << std::endl;
-  pOutputTFile->Close();
+  KNUOUT << "The program exited successfully but it seems there was problem." << std::endl << std::endl;
+  KNUOUT << "Finalizing due to kill sign... killarg: " << killarg << std::endl << std::endl;
+  if( killarg == 1 || killarg == 2)
+    exit(killarg);
+  else
+    pOutputTFile->Close();
   exit(killarg);
 }/*}}}*/
 
@@ -1358,6 +1466,7 @@ void KNUTree::InitLoop()
   sunPosElevation = 0;
   sunPosCalcResult = 0;
   unixTime = 0;
+  acEventTime = 0.;
   solarArrayCoord[0] = 0;
   solarArrayCoord[1] = 0;
   solarArrayCoord[2] = 0;
@@ -1508,65 +1617,66 @@ void KNUTree::InitLoop()
   tofEstimatedChargeOnLayer[2] = 0;
   tofEstimatedChargeOnLayer[3] = 0;
   tofCharge = 0;
+  tofChargeRMS = 0;
   tofUpperCharge = 0;
   tofLowerCharge = 0;
   tofChargeOnLayer[0] = 0;
   tofChargeOnLayer[1] = 0;
   tofChargeOnLayer[2] = 0;
   tofChargeOnLayer[3] = 0;
-  trkFitCodeFS = 0;
-  trkRigidityFS = 0;
-  trkRigidityInverseErrorFS = 0;
-  trkReducedChisquareFSX = 0;
-  trkReducedChisquareFSY = 0;
-  trkFitCodeMS = 0;
-  trkRigidityMS = 0;
-  trkRigidityInverseErrorMS = 0;
-  trkReducedChisquareMSY = 0;
-  trkReducedChisquareMSX = 0;
-  trkFitCodeInner = 0;
-  trkRigidityInverseErrorInner = 0;
-  trkReducedChisquareInnerX = 0;
-  trkReducedChisquareInnerY = 0;
-  trkLayerJQ[0] = 0;
-  trkLayerJQ[1] = 0;
-  trkLayerJQ[2] = 0;
-  trkLayerJQ[3] = 0;
-  trkLayerJQ[4] = 0;
-  trkLayerJQ[5] = 0;
-  trkLayerJQ[6] = 0;
-  trkLayerJQ[7] = 0;
-  trkLayerJQ[8] = 0;
-  trkEdepLayerJXSideOK[0] = 0;
-  trkEdepLayerJXSideOK[1] = 0;
-  trkEdepLayerJXSideOK[2] = 0;
-  trkEdepLayerJXSideOK[3] = 0;
-  trkEdepLayerJXSideOK[4] = 0;
-  trkEdepLayerJXSideOK[5] = 0;
-  trkEdepLayerJXSideOK[6] = 0;
-  trkEdepLayerJXSideOK[7] = 0;
-  trkEdepLayerJXSideOK[8] = 0;
-  trkEdepLayerJYSideOK[0] = 0;
-  trkEdepLayerJYSideOK[1] = 0;
-  trkEdepLayerJYSideOK[2] = 0;
-  trkEdepLayerJYSideOK[3] = 0;
-  trkEdepLayerJYSideOK[4] = 0;
-  trkEdepLayerJYSideOK[5] = 0;
-  trkEdepLayerJYSideOK[6] = 0;
-  trkEdepLayerJYSideOK[7] = 0;
-  trkEdepLayerJYSideOK[8] = 0;
-  trkEdepLayerJ[0] = 0;
-  trkEdepLayerJ[1] = 0;
-  trkEdepLayerJ[2] = 0;
-  trkEdepLayerJ[3] = 0;
-  trkEdepLayerJ[4] = 0;
-  trkEdepLayerJ[5] = 0;
-  trkEdepLayerJ[6] = 0;
-  trkEdepLayerJ[7] = 0;
-  trkEdepLayerJ[8] = 0;
-  trkCharge = 0;
-  trkInnerCharge = 0;
-  trkHasExtLayers = 0;
+  trkFitCodeFS = -1;
+  trkRigidityFS = -9999;
+  trkRigidityInverseErrorFS = -9999;
+  trkReducedChisquareFSX = -9999;
+  trkReducedChisquareFSY = -9999;
+  trkFitCodeMS = -1;
+  trkRigidityMS = -9999;
+  trkRigidityInverseErrorMS = -9999;
+  trkReducedChisquareMSY = -9999;
+  trkReducedChisquareMSX = -9999;
+  trkFitCodeInner = -1;
+  trkRigidityInverseErrorInner = -9999;
+  trkReducedChisquareInnerX = -9999;
+  trkReducedChisquareInnerY = -9999;
+  trkLayerJQ[0] = -1;
+  trkLayerJQ[1] = -1;
+  trkLayerJQ[2] = -1;
+  trkLayerJQ[3] = -1;
+  trkLayerJQ[4] = -1;
+  trkLayerJQ[5] = -1;
+  trkLayerJQ[6] = -1;
+  trkLayerJQ[7] = -1;
+  trkLayerJQ[8] = -1;
+  trkEdepLayerJXSideOK[0] = -1;
+  trkEdepLayerJXSideOK[1] = -1;
+  trkEdepLayerJXSideOK[2] = -1;
+  trkEdepLayerJXSideOK[3] = -1;
+  trkEdepLayerJXSideOK[4] = -1;
+  trkEdepLayerJXSideOK[5] = -1;
+  trkEdepLayerJXSideOK[6] = -1;
+  trkEdepLayerJXSideOK[7] = -1;
+  trkEdepLayerJXSideOK[8] = -1;
+  trkEdepLayerJYSideOK[0] = -1;
+  trkEdepLayerJYSideOK[1] = -1;
+  trkEdepLayerJYSideOK[2] = -1;
+  trkEdepLayerJYSideOK[3] = -1;
+  trkEdepLayerJYSideOK[4] = -1;
+  trkEdepLayerJYSideOK[5] = -1;
+  trkEdepLayerJYSideOK[6] = -1;
+  trkEdepLayerJYSideOK[7] = -1;
+  trkEdepLayerJYSideOK[8] = -1;
+  trkEdepLayerJ[0] = -1;
+  trkEdepLayerJ[1] = -1;
+  trkEdepLayerJ[2] = -1;
+  trkEdepLayerJ[3] = -1;
+  trkEdepLayerJ[4] = -1;
+  trkEdepLayerJ[5] = -1;
+  trkEdepLayerJ[6] = -1;
+  trkEdepLayerJ[7] = -1;
+  trkEdepLayerJ[8] = -1;
+  trkCharge = -1;
+  trkInnerCharge = -1;
+  trkHasExtLayers = -1;
   isRichAvailable = 0;
   richRebuild = -1;
   richIsGood = -1;
@@ -1590,6 +1700,7 @@ void KNUTree::InitLoop()
   trdNClusters = 0;
   trdNUnusedHits = 0;
   trdNTracks = 0;
+  trdNVertex = 0;
   trdTrackPhi = -9.;
   trdTrackTheta = -9.;
   trdTrackChi2 = -9.;
@@ -1615,26 +1726,6 @@ void KNUTree::InitLoop()
   trdTrackEdepL[17] = -1;
   trdTrackEdepL[18] = -1;
   trdTrackEdepL[19] = -1;
-  trdDepositedEnergyOnLayer[0] = -1;
-  trdDepositedEnergyOnLayer[1] = -1;
-  trdDepositedEnergyOnLayer[2] = -1;
-  trdDepositedEnergyOnLayer[3] = -1;
-  trdDepositedEnergyOnLayer[4] = -1;
-  trdDepositedEnergyOnLayer[5] = -1;
-  trdDepositedEnergyOnLayer[6] = -1;
-  trdDepositedEnergyOnLayer[7] = -1;
-  trdDepositedEnergyOnLayer[8] = -1;
-  trdDepositedEnergyOnLayer[9] = -1;
-  trdDepositedEnergyOnLayer[10] = -1;
-  trdDepositedEnergyOnLayer[11] = -1;
-  trdDepositedEnergyOnLayer[12] = -1;
-  trdDepositedEnergyOnLayer[13] = -1;
-  trdDepositedEnergyOnLayer[14] = -1;
-  trdDepositedEnergyOnLayer[15] = -1;
-  trdDepositedEnergyOnLayer[16] = -1;
-  trdDepositedEnergyOnLayer[17] = -1;
-  trdDepositedEnergyOnLayer[18] = -1;
-  trdDepositedEnergyOnLayer[19] = -1;
   trdTrackMeanDepositedEnergy  = -1;
   trdTrackTotalDepositedEnergy = -1;
   trdQtNActiveLayer = 0;
@@ -1666,6 +1757,10 @@ void KNUTree::InitLoop()
   trdPElectronToProtonLogLikelihoodRatio = 0;
   trdPHeliumToElectronLogLikelihoodRatio = 0;
   trdPHeliumToProtonLogLikelihoodRatio = 0;
+  trdPElectronLikelihood = 0;
+  trdPProtonLikelihood = 0;
+  trdPHeliumLikelihood = 0;
+  trdPNHybridHits = 0;
   accNHits = 0;
   accNRecoClPG = 0;
   accSector.clear();
@@ -1687,6 +1782,7 @@ void KNUTree::InitLoop()
  */
 void KNUTree::InitParticle()
 {/*{{{*/
+  /*
   particleID = 0;
   trkID = 0;
   parentID = 0;
@@ -1726,6 +1822,7 @@ void KNUTree::InitParticle()
   isInShadow = 0;
   zenithAngle = 0;
   isInSAA = 0;
+  */
   //ptlCharge = 0;
   /*
   ptlMomentum = 0;
@@ -1870,23 +1967,24 @@ void KNUTree::InitParticle()
   tofEstimatedChargeOnLayer[2] = 0;
   tofEstimatedChargeOnLayer[3] = 0;
   tofCharge = 0;
+  tofChargeRMS = 0;
   tofUpperCharge = 0;
   tofLowerCharge = 0;
   tofChargeOnLayer[0] = 0;
   tofChargeOnLayer[1] = 0;
   tofChargeOnLayer[2] = 0;
   tofChargeOnLayer[3] = 0;
-  trkFitCodeFS = 0;
+  trkFitCodeFS = -1;
   trkRigidityFS = 0;
   trkRigidityInverseErrorFS = 0;
   trkReducedChisquareFSX = 0;
   trkReducedChisquareFSY = 0;
-  trkFitCodeMS = 0;
+  trkFitCodeMS = -1;
   trkRigidityMS = 0;
   trkRigidityInverseErrorMS = 0;
   trkReducedChisquareMSY = 0;
   trkReducedChisquareMSX = 0;
-  trkFitCodeInner = 0;
+  trkFitCodeInner = -1;
   trkRigidityInverseErrorInner = 0;
   trkReducedChisquareInnerX = 0;
   trkReducedChisquareInnerY = 0;
@@ -1952,6 +2050,7 @@ void KNUTree::InitParticle()
   trdNClusters = 0;
   trdNUnusedHits = 0;
   trdNTracks = 0;
+  trdNVertex = 0;
   trdTrackPhi = -9.;
   trdTrackTheta = -9.;
   trdTrackChi2 = -9.;
@@ -1977,26 +2076,6 @@ void KNUTree::InitParticle()
   trdTrackEdepL[17] = -1;
   trdTrackEdepL[18] = -1;
   trdTrackEdepL[19] = -1;
-  trdDepositedEnergyOnLayer[0] = -1;
-  trdDepositedEnergyOnLayer[1] = -1;
-  trdDepositedEnergyOnLayer[2] = -1;
-  trdDepositedEnergyOnLayer[3] = -1;
-  trdDepositedEnergyOnLayer[4] = -1;
-  trdDepositedEnergyOnLayer[5] = -1;
-  trdDepositedEnergyOnLayer[6] = -1;
-  trdDepositedEnergyOnLayer[7] = -1;
-  trdDepositedEnergyOnLayer[8] = -1;
-  trdDepositedEnergyOnLayer[9] = -1;
-  trdDepositedEnergyOnLayer[10] = -1;
-  trdDepositedEnergyOnLayer[11] = -1;
-  trdDepositedEnergyOnLayer[12] = -1;
-  trdDepositedEnergyOnLayer[13] = -1;
-  trdDepositedEnergyOnLayer[14] = -1;
-  trdDepositedEnergyOnLayer[15] = -1;
-  trdDepositedEnergyOnLayer[16] = -1;
-  trdDepositedEnergyOnLayer[17] = -1;
-  trdDepositedEnergyOnLayer[18] = -1;
-  trdDepositedEnergyOnLayer[19] = -1;
   trdTrackMeanDepositedEnergy  = -1;
   trdTrackTotalDepositedEnergy = -1;
   trdQtNActiveLayer = 0;
@@ -2028,6 +2107,15 @@ void KNUTree::InitParticle()
   trdPElectronToProtonLogLikelihoodRatio = 0;
   trdPHeliumToElectronLogLikelihoodRatio = 0;
   trdPHeliumToProtonLogLikelihoodRatio = 0;
+  trdPElectronLikelihood = 0;
+  trdPProtonLikelihood = 0;
+  trdPHeliumLikelihood = 0;
+  trdPNHybridHits = 0;
+  trdPNActiveLayers = 0;
+  trdPNLowAdcHits = 0;
+  trdPNLowDxHits = 0;
+  acTrackerTrdTrackDistanceAtTrdCenterInSigmas = 0;
+  acTrackerTrdTrackAngularDistanceInSigmas = 0;
   accNHits = 0;
   accNRecoClPG = 0;
   accSector.clear();

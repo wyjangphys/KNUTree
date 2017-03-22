@@ -10,8 +10,8 @@
 #include <TFile.h>
 #include <TROOT.h>
 
-#define KNUOUT std::cout << "[KNUTree::Loop] "
-#define KNUERR std::cerr << "[KNUTree::Loop] Error: "
+#define KNUOUT std::cout << "\e[033;31m[KNUTree] \033[0m"
+#define KNUERR std::cerr << "\e[033;31m[KNUTree] Error: \033[0m"
 
 class KNUTree
 {
@@ -25,13 +25,17 @@ class KNUTree
     void Begin();
     void Loop();
     void LoopMultiPtl();
+    void Process();
+    void ProcessMC();
     void End();
     void End(int killarg);
     void InitLoop();
     void InitParticle();
 
     bool IsBadRun(AMSEventR* thisEvent);
+    bool IsBadRun(AMSChain* chain);
     bool IsScienceRun(AMSEventR* thisEvent);
+    bool IsScienceRun(AMSChain* chain);
     bool IsHardwareStatusGood(AMSEventR* thisEvent);
     bool IsUnbiasedPhysicsTriggerEvent(AMSEventR* thisEvent);
     bool IsACCPatternGood(AMSEventR* thisEvent);
@@ -75,11 +79,13 @@ class KNUTree
     bool isMC;
     unsigned int  nCut;                       // Number of cuts
     unsigned int  nEvents;                    // Number of total events
+    unsigned int  nExaminedParticles;
     unsigned int  nSelected;                  // Number of selected events
+    unsigned int  nSelectedParticles;         // Number of selected particles
 
     // Header informations
     unsigned int  nRun;                       // Run number
-    unsigned long int  nEvent;                     // Event number
+    unsigned long int  nEvent;                // Event number
     unsigned int  nLevel1;                    // Number of Level1 triggers
     unsigned int  nParticle;                  // Number of particles
     unsigned int  nCharge;                    // Number of charges
@@ -126,6 +132,7 @@ class KNUTree
     float         sunPosElevation;            // Elevation angle of the position of the Sun.
     int           sunPosCalcResult;           // Return value for the Sun's position calculation.
     unsigned int  unixTime;                   // UNIX time
+    float         acEventTime;
     float         solarArrayCoord[3];
     int           isInShadow;                 // Value for check whether the AMS is in ISS solar panel shadow or not.
     float         zenithAngle;
@@ -167,8 +174,12 @@ class KNUTree
     float         tofDepositedEnergyOnLayer[4];
     float         tofEstimatedChargeOnLayer[4];
     float         tofCharge;
+    float         tofChargeRMS;
     float         tofUpperCharge;
     float         tofLowerCharge;
+    float         tofAcCharge;
+    float         tofAcUpperCharge;
+    float         tofAcLowerCharge;
     float         tofChargeOnLayer[4];
     // Track related variables
     int           isEcalAvailable;
@@ -186,6 +197,21 @@ class KNUTree
     float         trkRigidityInverseErrorL1Inner;
     float         trkReducedChisquareL1InnerX;
     float         trkReducedChisquareL1InnerY;
+    int           trkFitCodeL9Inner;
+    float         trkRigidityL9Inner;
+    float         trkRigidityInverseErrorL9Inner;
+    float         trkReducedChisquareL9InnerX;
+    float         trkReducedChisquareL9InnerY;
+    int           trkFitCodeUpperInner;
+    float         trkRigidityUpperInner;
+    float         trkRigidityInverseErrorUpperInner;
+    float         trkReducedChisquareUpperInnerX;
+    float         trkReducedChisquareUpperInnerY;
+    int           trkFitCodeLowerInner;
+    float         trkRigidityLowerInner;
+    float         trkRigidityInverseErrorLowerInner;
+    float         trkReducedChisquareLowerInnerX;
+    float         trkReducedChisquareLowerInnerY;
     int           trkFitCodeFS;
     float         trkRigidityFS;
     float         trkRigidityInverseErrorFS;
@@ -218,8 +244,14 @@ class KNUTree
     int           richIsGood;
     int           richIsClean;
     int           richIsNaF;
+    int           richTileIndex;
+    float         richDistanceTileBorder;
+    int           richChargeCorrections;
+    int           richPMTCorrectionsFailed;
     int           richUsedHits;
+    int           richUsedTileIndex;
     float         richRingWidth;
+    float         richWidth;
     int           richNHits;
     int           richNPMTsOnRing;
     float         richBeta;
@@ -231,8 +263,14 @@ class KNUTree
     float         richExpectedPhotoelectrons;                 // Return value from RichRingR::getExpectedPhotoElectrons(bool corr=true)
     float         richExpectedPhotoElectrons;                 // Return value from RichRingR::getExpectedPhotoElectrons(int pmt, bool corr)
     int           richNUsedHits;
+    float         richTrackEmissionPoint[5];
     float         richTheta;
     float         richPhi;
+    float         richBetaConsistency;
+    int           richReflectedHits;                          // Return value from RichRingR::getReflectedHits()
+    float         richPMTChargeConsistency;                   // Return value from RichRingR::getPMTChargeConsistency()
+    float         richTrackerTrackOnRadiatorX;
+    float         richTrackerTrackOnRadiatorY;
     int           trdNClusters;
     int           trdNUnusedHits;
     int           trdNTracks;
@@ -242,9 +280,14 @@ class KNUTree
     int           trdTrackPattern;
     float         trdTrackCharge;
     float         trdTrackEdepL[20];
-    float         trdDepositedEnergyOnLayer[20];
     float         trdTrackMeanDepositedEnergy;
     float         trdTrackTotalDepositedEnergy;
+    float         trdTrackDeviationXWithInnerTrk;
+    float         trdTrackDeviationYWithInnerTrk;
+    float         trdTrackDistanceBetweenInnerTrk;
+    float         ResidualXBetweenInnerTrackAndSplineTrack;
+    float         ResidualYBetweenInnerTrackAndSplineTrack;
+    int           trdNVertex;
     int           trdQtNActiveLayer;
     int           trdQtIsCalibrationGood;
     int           trdQtIsSlowControlDataGood;
@@ -276,6 +319,15 @@ class KNUTree
     float         trdPElectronToProtonLogLikelihoodRatio;
     float         trdPHeliumToElectronLogLikelihoodRatio;
     float         trdPHeliumToProtonLogLikelihoodRatio;
+    float         trdPElectronLikelihood;
+    float         trdPProtonLikelihood;
+    float         trdPHeliumLikelihood;
+    int           trdPNHybridHits;
+    int           trdPNActiveLayers;
+    int           trdPNLowAdcHits;
+    int           trdPNLowDxHits;
+    float         acTrackerTrdTrackDistanceAtTrdCenterInSigmas;
+    float         acTrackerTrdTrackAngularDistanceInSigmas;
     int           accNHits;
     int           accNRecoClPG;
     vector<int>   accSector;

@@ -40,13 +40,19 @@ TARGET = main
 
 all : $(TARGET)
 
-$(TARGET) : main.o KNUTree.o KNUTreeLoop.o KNUTreeGetGoodParticleIndex.o KNUTreeIsACCPatternGood.o KNUTreeIsBadRun.o KNUTreeIsGoodBeta.o KNUTreeIsGoodTrTrack.o KNUTreeIsHardwareStatusGood.o KNUTreeIsScienceRun.o KNUTreeIsShowerTrackMatched.o KNUTreeIsTrackInsideEcalFiducialVolume.o KNUTreeIsTrkAlignmentGood.o KNUTreeIsUnbiasedPhysicsTriggerEvent.o
+$(TARGET) : main.o KNUTree.o KNUTreeProcessMC.o KNUTreeProcess.o KNUTreeLoop.o KNUTreeGetGoodParticleIndex.o KNUTreeIsACCPatternGood.o KNUTreeIsBadRun.o KNUTreeIsGoodBeta.o KNUTreeIsGoodTrTrack.o KNUTreeIsHardwareStatusGood.o KNUTreeIsScienceRun.o KNUTreeIsShowerTrackMatched.o KNUTreeIsTrackInsideEcalFiducialVolume.o KNUTreeIsTrkAlignmentGood.o KNUTreeIsUnbiasedPhysicsTriggerEvent.o
 	$(CXX) $(CXXFLAGS) $(ACSOFTFLAGS) $(ROOTLIBS) $(INCLUDES) -Wno-extra -o $@ $^ $(NTUPLE_PG)
 
 main.o : main.cxx
 	$(CXX) $(CXXFLAGS) $(ROOTLIBS) $(INCLUDES) -Wno-extra -c $^ -o $@
 
 KNUTree.o : KNUTree.cxx
+	$(CXX) $(CXXFLAGS) $(ACSOFTFLAGS) $(ROOTLIBS) $(INCLUDES) -Wno-extra -c $^ -o $@
+
+KNUTreeProcessMC.o : KNUTreeProcessMC.cxx
+	$(CXX) $(CXXFLAGS) $(ACSOFTFLAGS) $(ROOTLIBS) $(INCLUDES) -Wno-extra -c $^ -o $@
+
+KNUTreeProcess.o : KNUTreeProcess.cxx
 	$(CXX) $(CXXFLAGS) $(ACSOFTFLAGS) $(ROOTLIBS) $(INCLUDES) -Wno-extra -c $^ -o $@
 
 KNUTreeLoop.o : KNUTreeLoop.cxx
@@ -89,6 +95,8 @@ clean :
 	rm -rf main
 	rm -rf main.o
 	rm -rf KNUTree.o
+	rm -rf KNUTreeProcess.o
+	rm -rf KNUTreeProcessMC.o
 	rm -rf KNUTreeLoop.o
 	rm -rf KNUTreeIsBadRun.o
 	rm -rf KNUTreeGetGoodParticleIndex.o
@@ -103,6 +111,8 @@ clean :
 	rm -rf KNUTreeIsUnbiasedPhysicsTriggerEvent.o
 # DO NOT DELETE
 #KNUTree.o: KNUTree.cxx KNUTree.h
+#KNUTreeProcess.o: KNUTreeProcess.h KNUTree.h
+#KNUTreeProcessMC.o: KNUTreeProcess.h KNUTree.h
 #KNUTreeLoop.o: KNUTreeLoop.cxx KNUTree.h
 #KNUTreeIsBadRun.o: KNUTreeIsBadRun.cxx KNUTree.h
 #KNUTreeGetGoodParticleIndex.o: KNUTreeGetGoodParticleIndex.cxx KNUTree.h

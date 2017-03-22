@@ -14,9 +14,6 @@
 #include "TrSim.h"
 #include "TrExtAlignDB.h"
 
-#define KNUOUT std::cout << "[KNUTree::Loop] "
-#define KNUERR std::cerr << "[KNUTree::Loop] Error: "
-
 /**
  * @brief Loop over events.
  * @return no return.
@@ -41,8 +38,15 @@ void KNUTree::Loop()
   Analysis::AMSRootParticleFactory& particleFactory = amsRootSupport.ParticleFactory();
 
   for( unsigned long int e = 0; e < nEvents; e++ )
-  //for( unsigned long int e = 0; e < 1000; e++ )
   {
+    if( e == 0 ) KNUOUT << "Begin to loop over " << nEvents << " events." << endl;
+    if( (int)e % 10000 == 0 || e == nEvents -1 )
+    {
+      KNUOUT << "Processing " << e << " out of " << nEvents << " (" << (float)e/nEvents*100. << "%), "
+        << "nSelected = " << nSelected << ", currently, selection efficiency is (" << (float)nSelected/e*100. << "%)"
+        << "nSelectedParticles = " << nSelectedParticles << ", out of nExaminedParticles = " << nExaminedParticles<< endl;
+    }
+
     pAMSEvent = pChain->GetEvent(e);
     pHeader = &(pAMSEvent->fHeader);
 
@@ -684,6 +688,7 @@ void KNUTree::Loop()
  */
 void KNUTree::LoopMultiPtl()
 {/*{{{*/
+  KNUTree::InitLoop();
   // Latest RTI database (pass6)
   AMSSetupR::RTI::UseLatest(6);
   // Latest alignment
@@ -701,7 +706,13 @@ void KNUTree::LoopMultiPtl()
   for( unsigned long int e = 0; e < nEvents; e++ )
   {
     if( e == 0 ) KNUOUT << "Begin to loop over " << nEvents << " events." << endl;
-    KNUTree::InitLoop();
+    if( (int)e % 10000 == 0 || e == nEvents -1 )
+    {
+      KNUOUT << "Processing " << e << " out of " << nEvents << " (" << (float)e/nEvents*100. << "%), "
+        << "nSelected = " << nSelected << ", currently, selection efficiency is (" << (float)nSelected/e*100. << "%)"
+        << "nSelectedParticles = " << nSelectedParticles << ", out of nExaminedParticles = " << nExaminedParticles<< endl;
+    }
+
     pAMSEvent = pChain->GetEvent(e);
     pHeader = &(pAMSEvent->fHeader);
     iGoodParticleContainer.clear();
@@ -712,7 +723,7 @@ void KNUTree::LoopMultiPtl()
     nRun            = pAMSEvent->Run();
     nEvent          = pAMSEvent->Event();
     nLevel1         = pAMSEvent->nLevel1();
-    nParticle       = pAMSEvent->nParticle();
+    nParticle       = pAMSEvent->nParticle(); nExaminedParticles += nParticle;
     nCharge         = pAMSEvent->nCharge();
     nTrTrack        = pAMSEvent->nTrTrack();
     nTrdTrack       = pAMSEvent->nTrdTrack();
@@ -727,7 +738,7 @@ void KNUTree::LoopMultiPtl()
 
     if( isMC == false )
     {
-      if( this->IsBadRun(pAMSEvent) ) this->End(1);
+      //if( this->IsBadRun(pAMSEvent) ) this->End(1);
       hEvtCounter->Fill(1);
       if( !this->IsScienceRun(pAMSEvent) ) continue;
       hEvtCounter->Fill(2);
@@ -737,11 +748,6 @@ void KNUTree::LoopMultiPtl()
       hEvtCounter->Fill(4);
       if( !this->IsTrkAlignmentGood(pAMSEvent) ) continue;
       hEvtCounter->Fill(5);
-    }
-    else
-    {
-      if( this->IsBadRun(pAMSEvent) ) this->End(1);
-      hEvtCounter->Fill(1);
     }
 
     if( isMC == true )
@@ -970,6 +976,46 @@ void KNUTree::LoopMultiPtl()
         trkDirPhiLJ[ilayer]   = amsdir.getphi();
       }
 
+      // 
+      //
+      // TOF Section
+      //
+      //
+      tofNCluster         = pAMSEvent->nTofCluster();
+      tofNClusterH        = pAMSEvent->nTofClusterH();
+      pBetaH              = pParticle->pBetaH();
+      if(!pBetaH) { KNUERR << "NULL pBetaH pointer! This should not be happen! Exit the program!" << std::endl; exit(1); }
+      tofBeta             = pBetaH->GetBeta();
+      tofInvBetaErr       = pBetaH->GetEBetaV();
+      tofMass             = pBetaH->GetMass();
+      tofMassError        = pBetaH->GetEMass();
+      tofNUsedHits        = pBetaH->NTofClusterH();
+      tofNUnusedHits      = tofNCluster - tofNUsedHits;
+      if( pBetaH->IsGoodBeta()   == true ) isGoodBeta = 1;
+      else isGoodBeta     = 0;
+      if( pBetaH->IsTkTofMatch() == true ) isTkTofMatch = 1;
+      else isTkTofMatch   = 0;
+      tofReducedChisqT    = pBetaH->GetNormChi2T();
+      tofReducedChisqC    = pBetaH->GetNormChi2C();
+      pBetaH->GetQ(tofNUsedLayersForQ, tofCharge);
+      tofChargeOnLayer[0] = pBetaH->GetQL(0);
+      tofChargeOnLayer[1] = pBetaH->GetQL(1);
+      tofChargeOnLayer[2] = pBetaH->GetQL(2);
+      tofChargeOnLayer[3] = pBetaH->GetQL(3);
+
+      for(int i = 0; i < 4; ++i)
+      {
+        TofClusterHR* pTofClusterH = pBetaH->GetClusterHL(i);
+        if( pTofClusterH != 0 )
+        {
+          tofDepositedEnergyOnLayer[i] = pTofClusterH->GetEdep();
+        }
+        else
+          tofDepositedEnergyOnLayer[i] = -1;
+      }
+
+      int ncls[4] = {0, 0, 0, 0};
+      nTofClustersInTime  = pAMSEvent->GetNTofClustersInTime(pBetaH, ncls);
       //
       //
       // ECAL shower Section
@@ -1010,8 +1056,8 @@ void KNUTree::LoopMultiPtl()
 
       // ACSoft related lines
       particleFactory.SetAMSTrTrackR(pTrTrack);
-      particleFactory.SetAMSEcalShowerR(pEcalShower);
       particleFactory.SetAMSBetaHR(pBetaH);
+      if( pEcalShower ) particleFactory.SetAMSEcalShowerR(pEcalShower);
 
       if( !amsRootSupport.SwitchToSpecificTrackFitById(id_maxspan) ) continue;
       Analysis::Event& event = amsRootSupport.BuildEvent(pChain, pAMSEvent);
@@ -1069,11 +1115,11 @@ void KNUTree::LoopMultiPtl()
       int trdNUsedSegment = 0;
       if(!pTrdTrack)
       {
-        trdNClusters = -1;
-        trdNUsedHits = -1;
-        trdNUsedSegment = -1;
-        trdNUsedHits = -1;
-        trdNTracks = -1;
+        trdNClusters      = -1;
+        trdNUsedHits      = -1;
+        trdNUsedSegment   = -1;
+        trdNUsedHits      = -1;
+        trdNTracks        = -1;
         trdTrackTheta     = -9.;
         trdTrackPhi       = -9.;
         trdTrackPattern   = -9;
@@ -1089,9 +1135,8 @@ void KNUTree::LoopMultiPtl()
           pTrdSegment = pTrdTrack->pTrdSegment(i);
           trdNUsedHits += pTrdSegment->NTrdCluster();
         }
-        trdNUnusedHits = trdNClusters - trdNUsedHits;
-
-        trdNTracks  = pAMSEvent->nTrdTrack();
+        trdNUnusedHits  = trdNClusters - trdNUsedHits;
+        trdNTracks      = pAMSEvent->nTrdTrack();
         trdTrackTheta   = pTrdTrack->Theta;
         trdTrackPhi     = pTrdTrack->Phi;
         trdTrackPattern = pTrdTrack->Pattern;
@@ -1162,13 +1207,12 @@ void KNUTree::LoopMultiPtl()
         delete pTrdKCluster;
       }
 
-      if( e % 10000 == 0 || e == nEvents -1 )
-        KNUOUT << "Processed " << e << " out of " << nEvents << " (" << (float)e/nEvents*100. << "%)" << endl;
-
       outTree->Fill();
+      nSelectedParticles++;
     } // Particle Loop
+    nSelected++;
   } // Event Loop
-} // KNUTree::Loop()/*}}}*/
+} // KNUTree::LoopMultiPtl()/*}}}*/
 
 /**
  * @brief
