@@ -21,11 +21,14 @@ bool KNUTree::IsGoodBeta(BetaHR* thisBeta)
   bool debugMode = false;
   if( !thisBeta ) return false;
 
+  /*
+   * TOF beta cut is removed to accept low energy particles.
   if( fabs( thisBeta->GetBeta() ) < 0.4 )
   {
     if( debugMode ) KNUERR << "This event has beta less than 0.4." << endl;
     return false;
   }
+  */
 
   /*
   if( thisBeta->GetBuildType() != 1 )
