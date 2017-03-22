@@ -23,6 +23,7 @@ bool KNUTree::IsGoodBeta(BetaHR* thisBeta)
 
   /*
    * TOF beta cut is removed to accept low energy particles.
+   * So, this function checks only the beta object is available.
   if( fabs( thisBeta->GetBeta() ) < 0.4 )
   {
     if( debugMode ) KNUERR << "This event has beta less than 0.4." << endl;
