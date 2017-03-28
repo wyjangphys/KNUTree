@@ -13,6 +13,7 @@
 #include "TrdKCluster.h"
 #include "amschain.h"
 #include "bcorr.h"
+#include "TrCharge.h"
 #include "TrSim.h"
 #include "TrExtAlignDB.h"
 #include "TVector3.h"
@@ -68,9 +69,11 @@ void KNUTree::Process()
     AMSSetupR::RTI rti;
     if( !IsTrkAlignmentGood(pAMSEvent) ) continue;
     hEvtCounter->Fill(3);
-    int iParticle = GetGoodParticleIndex(pAMSEvent);
-    if( iParticle < 0 ) continue;
-    pParticle = pAMSEvent->pParticle(iParticle);
+    if( pAMSEvent->nParticle() != 1 ) continue;
+    hEvtCounter->Fill(4);
+    pParticle = pAMSEvent->pParticle(0);
+    if( !IsGoodParticle(pParticle) ) continue;
+    hEvtCounter->Fill(5);
 
     nSelected++;
     // End of Cut
@@ -267,7 +270,21 @@ void KNUTree::Process()
     }
 
     trkCharge = pTrTrack->GetQ();
+    std::vector<like_t> like;
+    if( fabs(trkRigidityInner) < 3 && tofBeta < 1)
+    {
+      trkZ = pTrTrack->GetZ(like, tofBeta);
+      trkInnerZ = pTrTrack->GetInnerZ(like, tofBeta);
+      for(int k = 0; k < 9; k++) trkLayerJZ[k] = pTrTrack->GetInnerZ(like, k, tofBeta);
+    }
+    else
+    {
+      trkZ = pTrTrack->GetZ(like);
+      trkInnerZ = pTrTrack->GetInnerZ(like);
+      for(int k = 0; k < 9; k++) trkLayerJZ[k] = pTrTrack->GetInnerZ(like, k);
+    }
     trkInnerCharge = pTrTrack->GetInnerQ();
+
     trkHasExtLayers = pTrTrack->HasExtLayers();
 
     // 
@@ -295,6 +312,7 @@ void KNUTree::Process()
     tofChargeOnLayer[1] = pBetaH->GetQL(1);
     tofChargeOnLayer[2] = pBetaH->GetQL(2);
     tofChargeOnLayer[3] = pBetaH->GetQL(3);
+    tofZ = pBetaH->GetZ(nTofLUsedForZ, probTOFZ);
 
     for(int i = 0; i < 4; ++i)
     {

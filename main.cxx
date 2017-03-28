@@ -8,10 +8,23 @@
  */
 
 #include <iostream>
+#include <string>
+#include <cstdio>
 #include <ctime>
 #include <root.h>
 
 #include "KNUTree.h"
+
+const std::string CurrentDateTime()
+{
+  time_t now = time(0);
+  struct tm tstruct;
+  char buf[80];
+  tstruct = *localtime(&now);
+  strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+  return buf;
+}
 
 int main(int argc, char* argv[])
 {
@@ -20,6 +33,7 @@ int main(int argc, char* argv[])
   TStopwatch clock;
   clock.Start();
   KNUOUT << "TStopwatch is started." << std::endl;
+  KNUOUT << "Current time : " << CurrentDateTime() << std::endl;
 
   KNUTree knuTree("KNUTree", argc, argv);
   knuTree.Begin();
@@ -40,6 +54,7 @@ int main(int argc, char* argv[])
 
   clock.Stop();
   KNUOUT << "TStopwatch report : " << std::endl;
+  KNUOUT << "Current time : " << CurrentDateTime() << std::endl;
   clock.Print();
   return 0;
 }

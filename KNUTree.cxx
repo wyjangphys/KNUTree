@@ -835,6 +835,7 @@ void KNUTree::Init()
   tofChargeOnLayer[1] = -1;
   tofChargeOnLayer[2] = -1;
   tofChargeOnLayer[3] = -1;
+  tofZ = -1;
   trkFitCodeL1Inner = -1;
   trkRigidityL1Inner = -9999;
   trkRigidityInverseErrorL1Inner = -9999;
@@ -908,6 +909,9 @@ void KNUTree::Init()
   }
   trkCharge = -1;
   trkInnerCharge = -1;
+  trkZ = -1;
+  trkInnerZ = -1;
+  for( int i = 0; i < 9; i++ ) trkLayerJZ[i] = -1;
   trkHasExtLayers = 0;
   isRichAvailable = 0;
   richRebuild = 0;
@@ -1155,6 +1159,9 @@ void KNUTree::Init()
   outTree->Branch("tofAcUpperCharge",                        &tofAcUpperCharge,                        "tofAcUpperCharge/F");
   outTree->Branch("tofAcLowerCharge",                        &tofAcLowerCharge,                        "tofAcLowerCharge/F");
   outTree->Branch("tofChargeOnLayer",                        &tofChargeOnLayer,                        "tofChargeOnLayer[4]/F");
+  outTree->Branch("tofZ",                                    &tofZ,                                    "tofZ/I");
+  outTree->Branch("nTofLUsedForZ",                           &nTofLUsedForZ,                           "nTofLUsedForZ/I");
+  outTree->Branch("probTOFZ",                                &probTOFZ,                                "probTOFZ/F");
 
   outTree->Branch("trkFitCodeFS",                            &trkFitCodeFS,                            "trkFitCodeFS/I");
   outTree->Branch("trkRigidityFS",                           &trkRigidityFS,                           "trkRigidityFS/F");
@@ -1209,7 +1216,11 @@ void KNUTree::Init()
   outTree->Branch("trkDirPhiLJ",                             &trkDirPhiLJ,                             "trkDirPhiLJ[9]/F");
   outTree->Branch("trkCharge",                               &trkCharge,                               "trkCharge/F");
   outTree->Branch("trkInnerCharge",                          &trkInnerCharge,                          "trkInnerCharge/F");
+  outTree->Branch("trkZ",                                    &trkZ,                                    "trkZ/I");
+  outTree->Branch("trkInnerZ",                               &trkInnerZ,                               "trkInnerZ/I");
+  outTree->Branch("trkLayerJZ",                              &trkLayerJZ,                              "trkLayerJZ[9]/I");
   outTree->Branch("trkHasExtLayers",                         &trkHasExtLayers,                         "trkHasExtLayers/F");
+
   outTree->Branch("isRichAvailable",                         &isRichAvailable,                         "isRichAvailable/I");
   outTree->Branch("richRebuild",                             &richRebuild,                             "richRebuild/I");
   outTree->Branch("richIsGood",                              &richIsGood,                              "richIsGood/I");

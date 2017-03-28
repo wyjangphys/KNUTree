@@ -41,6 +41,7 @@ class KNUTree
     bool IsACCPatternGood(AMSEventR* thisEvent);
     bool IsGoodBeta(BetaHR* thisBeta);
     bool IsGoodLiveTime(AMSEventR* thisEvent);
+    bool IsGoodParticle(ParticleR* thisParticle);
     bool IsInSouthAtlanticAnomaly(AMSEventR* thisEvent);
     bool IsInSolarArrays(AMSEventR* thisEvent);
     bool IsGoodTrTrack(TrTrackR* thisTrack);
@@ -181,6 +182,9 @@ class KNUTree
     float         tofAcUpperCharge;
     float         tofAcLowerCharge;
     float         tofChargeOnLayer[4];
+    int           nTofLUsedForZ;
+    float         probTOFZ;
+    int           tofZ;
     // Track related variables
     int           isEcalAvailable;
     float         showerEnergyD;
@@ -238,6 +242,9 @@ class KNUTree
     float         trkDirPhiLJ[9];
     float         trkCharge;
     float         trkInnerCharge;
+    int           trkZ;
+    int           trkInnerZ;
+    int           trkLayerJZ[9];
     int           trkHasExtLayers;
     int           isRichAvailable;
     int           richRebuild;

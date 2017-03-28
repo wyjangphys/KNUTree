@@ -40,7 +40,7 @@ TARGET = main
 
 all : $(TARGET)
 
-$(TARGET) : main.o KNUTree.o KNUTreeProcessMC.o KNUTreeProcess.o KNUTreeLoop.o KNUTreeGetGoodParticleIndex.o KNUTreeIsACCPatternGood.o KNUTreeIsBadRun.o KNUTreeIsGoodBeta.o KNUTreeIsGoodTrTrack.o KNUTreeIsHardwareStatusGood.o KNUTreeIsScienceRun.o KNUTreeIsShowerTrackMatched.o KNUTreeIsTrackInsideEcalFiducialVolume.o KNUTreeIsTrkAlignmentGood.o KNUTreeIsUnbiasedPhysicsTriggerEvent.o
+$(TARGET) : main.o KNUTree.o KNUTreeProcessMC.o KNUTreeProcess.o KNUTreeIsGoodParticle.o KNUTreeIsACCPatternGood.o KNUTreeIsBadRun.o KNUTreeIsGoodBeta.o KNUTreeIsGoodTrTrack.o KNUTreeIsHardwareStatusGood.o KNUTreeIsScienceRun.o KNUTreeIsShowerTrackMatched.o KNUTreeIsTrackInsideEcalFiducialVolume.o KNUTreeIsTrkAlignmentGood.o KNUTreeIsUnbiasedPhysicsTriggerEvent.o
 	$(CXX) $(CXXFLAGS) $(ACSOFTFLAGS) $(ROOTLIBS) $(INCLUDES) -Wno-extra -o $@ $^ $(NTUPLE_PG)
 
 main.o : main.cxx
@@ -61,7 +61,7 @@ KNUTreeLoop.o : KNUTreeLoop.cxx
 KNUTreeIsBadRun.o : KNUTreeIsBadRun.cxx
 	$(CXX) $(CXXFLAGS) $(ROOTLIBS) $(INCLUDES) -Wno-extra -c $^ -o $@
 
-KNUTreeGetGoodParticleIndex.o : KNUTreeGetGoodParticleIndex.cxx
+KNUTreeIsGoodParticle.o : KNUTreeIsGoodParticle.cxx
 	$(CXX) $(CXXFLAGS) $(ROOTLIBS) $(INCLUDES) -Wno-extra -c $^ -o $@
 
 KNUTreeIsACCPatternGood.o : KNUTreeIsACCPatternGood.cxx
