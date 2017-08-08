@@ -41,7 +41,7 @@ void KNUTree::ProcessMC()
   Analysis::EventFactory&              eventFactory = amsRootSupport.EventFactory();
   Analysis::AMSRootParticleFactory& particleFactory = amsRootSupport.ParticleFactory();
 
-  //for( unsigned long int e = 0; e < 10000; e++ )
+  //for( unsigned long int e = 0; e < 10; e++ )
   for( unsigned long int e = 0; e < nEvents; e++ )
   {
     // Print out the working status briefly.
@@ -83,6 +83,16 @@ void KNUTree::ProcessMC()
     nBetaH          = pAMSEvent->nBetaH();
     nEcalShower     = pAMSEvent->nEcalShower();
     nVertex         = pAMSEvent->nVertex();
+
+    nAntiMCCluster  = pAMSEvent->nAntiMCCluster();
+    nTrMCCluster    = pAMSEvent->nTrMCCluster();
+    nTofMCCluster   = pAMSEvent->nTofMCCluster();
+    nTofMCPmtHit    = pAMSEvent->nTofMCPmtHit();
+    nEcalMCHit      = pAMSEvent->nEcalMCHit();
+    nTrdMCCluster   = pAMSEvent->nTrdMCCluster();
+    nRichMCCluster  = pAMSEvent->nRichMCCluster();
+    nMCTrack        = pAMSEvent->nMCTrack();
+    nMCEventg       = pAMSEvent->nMCEventg();
 
     // Object preparation
     pTrTrack = pParticle->pTrTrack();
@@ -258,6 +268,10 @@ void KNUTree::ProcessMC()
     if(!pBetaH) { KNUERR << "Event: " << e << " NULL pBetaH pointer! This should not be happen! Exit the program!" << std::endl; exit(1); }
     tofBeta             = pBetaH->GetBeta();
     tofInvBetaErr       = pBetaH->GetEBetaV();
+    tofNormEBetaV       = pBetaH->GetNormEBetaV();
+    tofBetaS            = pBetaH->GetBetaS();
+    tofBetaC            = pBetaH->GetBetaC();
+    tofEBetaCV          = pBetaH->GetEBetaCV();
     tofMass             = pBetaH->GetMass();
     tofMassError        = pBetaH->GetEMass();
     tofNUsedHits        = pBetaH->NTofClusterH();
@@ -266,8 +280,23 @@ void KNUTree::ProcessMC()
     else isGoodBeta     = 0;
     if( pBetaH->IsTkTofMatch() == true ) isTkTofMatch = 1;
     else isTkTofMatch   = 0;
+    tofChisqT           = pBetaH->GetChi2T();
+    tofChisqC           = pBetaH->GetChi2C();
     tofReducedChisqT    = pBetaH->GetNormChi2T();
     tofReducedChisqC    = pBetaH->GetNormChi2C();
+    tofSumHit           = pBetaH->GetSumHit();
+    tofNUsedClusterH    = pBetaH->GetUseHit();
+    for( int k = 0; k < 4; k++ )
+    {
+      tofPatternOnLayer[k] = pBetaH->GetPattern(k);
+      tofTimeOnLayer[k] = pBetaH->GetTime(k);
+      tofETimeOnLayer[k] = pBetaH->GetETime(k);
+      tofETCooOnLayer[k] = pBetaH->GetETCoo(k);
+      tofTResidualOnLayer[k] = pBetaH->GetTResidual(k);
+      tofTkTFLenOnLayer[k] = pBetaH->GetTkTFLen(k);
+      tofCResidualXOnLayer[k] = pBetaH->GetCResidual(k, 0);
+      tofCResidualYOnLayer[k] = pBetaH->GetCResidual(k, 1);
+    }
     tofCharge = pBetaH->GetQ(tofNUsedLayersForQ, tofChargeRMS);
     tofChargeOnLayer[0] = pBetaH->GetQL(0);
     tofChargeOnLayer[1] = pBetaH->GetQL(1);
@@ -292,6 +321,97 @@ void KNUTree::ProcessMC()
     tofAcCharge      = acParticle->TofCharge();
     tofAcUpperCharge = acParticle->UpperTofCharge();
     tofAcLowerCharge = acParticle->LowerTofCharge();
+
+    // TOF MC section
+    vector<TofMCClusterR>* pvTofMCCluster;
+    vector<int> score;
+    score.clear();
+    bool survivedAtL[4] = { false, false, false, false };
+
+    /*
+    cout << "Event : " << e << " | Particle : " << Form("%+3d", particleID) <<
+      " | GtrkID : " << Form("%+5d", trkID) <<
+      " | ParentNo : " << Form("%+5d", parentID) << endl;
+      */
+    if( nTofMCCluster != 0 )
+    {
+      //for( std::vector<TofMCClusterR>::iterator it = pvTofMCCluster->begin(); it !- pvTofMCCluster->end(); ++it )
+      for( Int_t i = 0; i < nTofMCCluster; ++i )
+      {
+        TofMCClusterR* pTofMCCluster = pAMSEvent->pTofMCCluster(i);
+        switch(pTofMCCluster->GetLayer())
+        {
+          case 0:
+            if( 
+              particleID == pTofMCCluster->Particle &&
+              trkID == pTofMCCluster->GtrkID &&
+              parentID == pTofMCCluster->ParentNo )
+              survivedAtL[0] = true;
+            break;
+          case 1:
+            if(
+              particleID == pTofMCCluster->Particle &&
+              trkID == pTofMCCluster->GtrkID &&
+              parentID == pTofMCCluster->ParentNo )
+              survivedAtL[1] = true;
+            break;
+          case 2:
+            if(
+              particleID == pTofMCCluster->Particle &&
+              trkID == pTofMCCluster->GtrkID &&
+              parentID == pTofMCCluster->ParentNo )
+              survivedAtL[2] = true;
+            break;
+          case 3:
+            if(
+              particleID == pTofMCCluster->Particle &&
+              trkID == pTofMCCluster->GtrkID &&
+              parentID == pTofMCCluster->ParentNo )
+              survivedAtL[3] = true;
+            break;
+          default:
+            break;
+        }
+
+        /*    Information print-out for debugging
+        cout << "TofMCCluster---| i : " << Form("%2d",i) <<
+          " | Layer : "                 << pTofMCCluster->GetLayer() <<
+          " | Bar : "                   << Form("%3d", pTofMCCluster->GetBar()) <<
+          " | Idsoft : "                << pTofMCCluster->Idsoft <<
+          " | ParentNo : "              << Form("%+5d", pTofMCCluster->ParentNo) <<
+          " | GtrkID : "                << Form("%+5d", pTofMCCluster->GtrkID) <<
+          " | Particle : "              << Form("%+3d", pTofMCCluster->Particle) <<
+          " | Coo_X(cm) : "             << Form("%+7.4f", pTofMCCluster->Coo[0]) <<
+          " | Coo_Y(cm) : "             << Form("%+7.4f", pTofMCCluster->Coo[1]) <<
+          " | Coo_Z(cm) : "             << Form("%+7.4f", pTofMCCluster->Coo[2]) <<
+          " | TOF(sec) : "              << Form("%7.4f", pTofMCCluster->TOF) <<
+          " | Beta : "                  << Form("%7.4f", pTofMCCluster->Beta) <<
+          " | Edep(GeV) : "             << Form("%7.4f", pTofMCCluster->Edep) <<
+          " | EdepR(GeV) : "            << Form("%7.4f", pTofMCCluster->EdepR) <<
+          " | Step(cm) : "              << Form("%7.4f", pTofMCCluster->Step) << endl;
+          */
+      }
+      for( int i = 0; i < pBetaH->NTofClusterH(); ++i )
+      {
+        TofClusterHR* pTofClusterH = pBetaH->GetClusterHL(i);
+        /*    Information print-out for debugging
+        cout << "TofClusterH----| i : " << Form("%2d",i) <<
+          " | Layer : "                 << pTofClusterH->Layer <<
+          " | Bar : "                   << Form("%3d", pTofClusterH->Bar) <<
+          " | Coo_X(cm) : "             << Form("%+7.4f", pTofClusterH->Coo[0]) <<
+          " | Coo_Y(cm) : "             << Form("%+7.4f", pTofClusterH->Coo[1]) <<
+          " | Coo_Z(cm) : "             << Form("%+7.4f", pTofClusterH->Coo[2]) <<
+          " | AEdep : "                 << Form("%+7.4f", pTofClusterH->AEdep) <<
+          " | DEdep : "                 << Form("%+7.4f", pTofClusterH->DEdep) << endl;
+          */
+      }
+    }
+    if( survivedAtL[0] && survivedAtL[1] && survivedAtL[2] && survivedAtL[3] )
+    {
+      //cout << "==============Event: " << e << ", SURVIVED!!================" << endl;
+      survived_tof = 1;
+    }
+    else survived_tof = 0;
 
     //
     //
@@ -546,6 +666,342 @@ void KNUTree::ProcessMC()
         }
       }
       delete pTrdKCluster;
+    }
+
+
+    /*
+     *
+     *  MC particle tracking related code piece
+     *
+     *
+     */
+
+    conversionIdContainer.clear();
+
+    // ParticleR class coordinate information
+    //
+    //       %% OLD SCHEME to J SCHEME
+    //        J SCHEME(index)
+    //        Layer           1[0] 2[1] 3[2] 4[3] 5[4] 6[5] 7[6] 8[7] 9[8]
+    //        OLD SCHEME(index)
+    //        Layer           8[7] 1[0] 2[1] 3[2] 4[3] 5[4] 6[5] 7[6] 9[8]
+
+    const bool debug_mc = true;
+    if( debug_mc == true ) {
+      KNUOUT << "Event: " << e << " ========== " << endl;
+      KNUOUT << "Coordinate information for each detector" << endl;
+      KNUOUT << "TRK L1:     X: " << pParticle->TrCoo[7][0] << ", Y: " << pParticle->TrCoo[7][1] << ", Z: " << pParticle->TrCoo[7][2] << endl;
+      KNUOUT << "TRD Top:    X: " << pParticle->TRDCoo[1][0] << ", Y: " << pParticle->TRDCoo[1][1] << ", Z: " << pParticle->TRDCoo[1][2] << endl;
+      KNUOUT << "TRD Center: X: " << pParticle->TRDCoo[0][0] << ", Y: " << pParticle->TRDCoo[0][1] << ", Z: " << pParticle->TRDCoo[0][2] << endl;
+      KNUOUT << "TOF L1:     X: " << pParticle->TOFCoo[0][0] << ", Y: " << pParticle->TOFCoo[0][1] << ", Z: " << pParticle->TOFCoo[0][2] << endl;
+      KNUOUT << "TOF L2:     X: " << pParticle->TOFCoo[1][0] << ", Y: " << pParticle->TOFCoo[1][1] << ", Z: " << pParticle->TOFCoo[1][2] << endl;
+      KNUOUT << "TRK L2:     X: " << pParticle->TrCoo[0][0] << ", Y: " << pParticle->TrCoo[0][1] << ", Z: " << pParticle->TrCoo[0][2] << endl;
+      KNUOUT << "TRK L3:     X: " << pParticle->TrCoo[1][0] << ", Y: " << pParticle->TrCoo[1][1] << ", Z: " << pParticle->TrCoo[1][2] << endl;
+      KNUOUT << "TRK L4:     X: " << pParticle->TrCoo[2][0] << ", Y: " << pParticle->TrCoo[2][1] << ", Z: " << pParticle->TrCoo[2][2] << endl;
+      KNUOUT << "TRK L5:     X: " << pParticle->TrCoo[3][0] << ", Y: " << pParticle->TrCoo[3][1] << ", Z: " << pParticle->TrCoo[3][2] << endl;
+      KNUOUT << "TRK L6:     X: " << pParticle->TrCoo[4][0] << ", Y: " << pParticle->TrCoo[4][1] << ", Z: " << pParticle->TrCoo[4][2] << endl;
+      KNUOUT << "TRK L7:     X: " << pParticle->TrCoo[5][0] << ", Y: " << pParticle->TrCoo[5][1] << ", Z: " << pParticle->TrCoo[5][2] << endl;
+      KNUOUT << "TRK L8:     X: " << pParticle->TrCoo[6][0] << ", Y: " << pParticle->TrCoo[6][1] << ", Z: " << pParticle->TrCoo[6][2] << endl;
+      KNUOUT << "TOF L3:     X: " << pParticle->TOFCoo[2][0] << ", Y: " << pParticle->TOFCoo[2][1] << ", Z: " << pParticle->TOFCoo[2][2] << endl;
+      KNUOUT << "TOF L4:     X: " << pParticle->TOFCoo[3][0] << ", Y: " << pParticle->TOFCoo[3][1] << ", Z: " << pParticle->TOFCoo[3][2] << endl;
+      KNUOUT << "RICH Rad.:  X: " << pParticle->RichCoo[0][0] << ", Y: " << pParticle->RichCoo[0][1] << ", Z: " << pParticle->RichCoo[0][2] << endl;
+      KNUOUT << "RICH PMT:   X: " << pParticle->RichCoo[1][0] << ", Y: " << pParticle->RichCoo[1][1] << ", Z: " << pParticle->RichCoo[1][2] << endl;
+      KNUOUT << "TRK L9:     X: " << pParticle->TrCoo[8][0] << ", Y: " << pParticle->TrCoo[8][1] << ", Z: " << pParticle->TrCoo[8][2] << endl;
+      KNUOUT << "ECAL Enter: X: " << pParticle->EcalCoo[0][0] << ", Y: " << pParticle->EcalCoo[0][1] << ", Z: " << pParticle->EcalCoo[0][2] << endl;
+      KNUOUT << "ECAL COFG:  X: " << pParticle->EcalCoo[1][0] << ", Y: " << pParticle->EcalCoo[1][1] << ", Z: " << pParticle->EcalCoo[1][2] << endl;
+      KNUOUT << "ECAL Exit:  X: " << pParticle->EcalCoo[2][0] << ", Y: " << pParticle->EcalCoo[2][1] << ", Z: " << pParticle->EcalCoo[2][2] << endl << endl;
+    }
+
+    double tolerance_distance = 0.1;
+    KNUOUT << "MCCluster Info" << endl;
+    TrMCClusterR* pTrMCCluster = NULL;
+
+    for( int j = 0; j < nTrMCCluster; j++ )
+    {
+      pTrMCCluster = pAMSEvent->pTrMCCluster(j);
+      if( debug_mc == true ) { KNUOUT << "TrMCCluster(" << j << "): X: " << pTrMCCluster->GetXgl().x() << ", Y: " << pTrMCCluster->GetXgl().y() << ", Z: " << pTrMCCluster->GetXgl().z(); }
+
+      /*
+      int iTrCooMap[9] = { 7, 0, 1, 2, 3, 4, 5, 6, 8 };
+      for( int iLayer = 0; iLayer < 9; iLayer++ )
+      {
+        if( fabs( pTrMCCluster->GetXgl().z() - pParticle->TrCoo[iTrCooMap[iLayer]][2] ) < tolerance_distance )
+        {
+          double dist = 0;
+          double deltax = 0;
+          double deltay = 0;
+          deltax = pParticle->TrCoo[iTrCooMap[iLayer]][0] - pTrMCCluster->GetXgl().x();
+          deltay = pParticle->TrCoo[iTrCooMap[iLayer]][1] - pTrMCCluster->GetXgl().y();
+          dist = sqrt( deltax * deltax + deltay * deltay );
+          cout << Form(" -> L%d hit, Distance = %f", iLayer, dist);
+          if( dist < 1 )
+          {
+            cout << " --> NEAR hit";
+            if( !pTrMCCluster->IsPrimary() ) { cout << "  [CONVERTED!] PID: " << pTrMCCluster->GetPart() << endl; conversionId = pTrMCCluster->GetPart(); conversionIdContainer.push_back(conversionId); }
+            else cout << " survived." << endl;
+          }
+          else
+            cout << " --> FAR hit." << endl;
+        }
+      }
+      */
+      // case : L1
+      if( fabs( pTrMCCluster->GetXgl().z() - pParticle->TrCoo[7][2] ) < tolerance_distance )
+      {
+        if( debug_mc == true ) cout << " -> L1 hit, Distance = ";
+        double dist = 0;
+        double deltax = 0;
+        double deltay = 0;
+        deltax = pParticle->TrCoo[7][0] - pTrMCCluster->GetXgl().x();
+        deltay = pParticle->TrCoo[7][1] - pTrMCCluster->GetXgl().y();
+        dist = sqrt( deltax * deltax + deltay * deltay );
+        if( debug_mc == true ) cout << dist;
+        if( dist < 1 )
+        {
+          if( debug_mc == true ) cout << " --> NEAR hit";
+          if( !pTrMCCluster->IsPrimary() ){
+            if( debug_mc == true ) {
+              cout << "  [CONVERTED!] PID: " << pTrMCCluster->GetPart() << endl; conversionId = pTrMCCluster->GetPart(); conversionIdContainer.push_back(conversionId);
+            }
+          }
+          else
+            if( debug_mc == true ) cout << " survived. " << endl;
+        }
+        else
+          if( debug_mc == true) cout << " --> FAR hit" << endl;
+      }
+      // case : L2
+      else if( fabs( pTrMCCluster->GetXgl().z() - pParticle->TrCoo[0][2] ) < tolerance_distance )
+      {
+        if( debug_mc == true) cout << " -> L2 hit, Distance = ";
+        double dist = 0;
+        double deltax = 0;
+        double deltay = 0;
+        deltax = pParticle->TrCoo[0][0] - pTrMCCluster->GetXgl().x();
+        deltay = pParticle->TrCoo[0][1] - pTrMCCluster->GetXgl().y();
+        dist = sqrt( deltax * deltax + deltay * deltay );
+        if( debug_mc == true) cout << dist;
+        if( dist < 1 )
+        {
+          if( debug_mc == true) cout << " --> NEAR hit";
+          if( !pTrMCCluster->IsPrimary() ){
+            if( debug_mc == true) {
+              cout << "  [CONVERTED!] PID: " << pTrMCCluster->GetPart() << endl; conversionId = pTrMCCluster->GetPart(); conversionIdContainer.push_back(conversionId);
+            }
+          }
+          else if( debug_mc == true ) cout << " survived. " << endl;
+        }
+        else if( debug_mc == true ) cout << " --> FAR hit" << endl;
+      }
+      // case : L3
+      else if( fabs( pTrMCCluster->GetXgl().z() - pParticle->TrCoo[1][2] ) < tolerance_distance )
+      {
+        if( debug_mc == true ) cout << " -> L3 hit, Distance = ";
+        double dist = 0;
+        double deltax = 0;
+        double deltay = 0;
+        deltax = pParticle->TrCoo[1][0] - pTrMCCluster->GetXgl().x();
+        deltay = pParticle->TrCoo[1][1] - pTrMCCluster->GetXgl().y();
+        dist = sqrt( deltax * deltax + deltay * deltay );
+        if( debug_mc == true ) cout << dist;
+        if( dist < 1 )
+        {
+          if( debug_mc == true ) cout << " --> NEAR hit";
+          if( !pTrMCCluster->IsPrimary() ){
+            if( debug_mc == true ) {
+              cout << "  [CONVERTED!] PID: " << pTrMCCluster->GetPart() << endl; conversionId = pTrMCCluster->GetPart(); conversionIdContainer.push_back(conversionId);
+            }
+          }
+          else
+            if( debug_mc == true ) cout << " survived. " << endl;
+        }
+        else
+          if( debug_mc == true ) cout << " --> FAR hit" << endl;
+      }
+      // case : L4
+      else if( fabs( pTrMCCluster->GetXgl().z() - pParticle->TrCoo[2][2] ) < tolerance_distance )
+      {
+        if( debug_mc == true ) cout << " -> L4 hit, Distance = ";
+        double dist = 0;
+        double deltax = 0;
+        double deltay = 0;
+        deltax = pParticle->TrCoo[2][0] - pTrMCCluster->GetXgl().x();
+        deltay = pParticle->TrCoo[2][1] - pTrMCCluster->GetXgl().y();
+        dist = sqrt( deltax * deltax + deltay * deltay );
+        if( debug_mc == true ) cout << dist;
+        if( dist < 1 )
+        {
+          if( debug_mc == true ) cout << " --> NEAR hit";
+          if( !pTrMCCluster->IsPrimary() ){
+            if( debug_mc == true ) {
+              cout << "  [CONVERTED!] PID: " << pTrMCCluster->GetPart() << endl; conversionId = pTrMCCluster->GetPart(); conversionIdContainer.push_back(conversionId);
+            }
+          }
+          else
+            if( debug_mc == true ) cout << " survived. " << endl;
+        }
+        else
+          if( debug_mc == true ) cout << " --> FAR hit" << endl;
+      }
+      // case : L5
+      else if( fabs( pTrMCCluster->GetXgl().z() - pParticle->TrCoo[3][2] ) < tolerance_distance )
+      {
+        if( debug_mc == true ) cout << " -> L5 hit, Distance = ";
+        double dist = 0;
+        double deltax = 0;
+        double deltay = 0;
+        deltax = pParticle->TrCoo[3][0] - pTrMCCluster->GetXgl().x();
+        deltay = pParticle->TrCoo[3][1] - pTrMCCluster->GetXgl().y();
+        dist = sqrt( deltax * deltax + deltay * deltay );
+        if( debug_mc == true ) cout << dist;
+        if( dist < 1 )
+        {
+          if( debug_mc == true ) cout << " --> NEAR hit";
+          if( !pTrMCCluster->IsPrimary() ){
+            if( debug_mc == true ) { 
+              cout << "  [CONVERTED!] PID: " << pTrMCCluster->GetPart() << endl; conversionId = pTrMCCluster->GetPart(); conversionIdContainer.push_back(conversionId);
+            }
+          }
+          else
+            if( debug_mc == true ) cout << " survived. " << endl;
+        }
+        else
+          if( debug_mc == true ) cout << " --> FAR hit" << endl;
+      }
+      // case : L6
+      else if( fabs( pTrMCCluster->GetXgl().z() - pParticle->TrCoo[4][2] ) < tolerance_distance )
+      {
+        if( debug_mc == true) cout << " -> L6 hit, Distance = ";
+        double dist = 0;
+        double deltax = 0;
+        double deltay = 0;
+        deltax = pParticle->TrCoo[4][0] - pTrMCCluster->GetXgl().x();
+        deltay = pParticle->TrCoo[4][1] - pTrMCCluster->GetXgl().y();
+        dist = sqrt( deltax * deltax + deltay * deltay );
+        if( debug_mc == true) cout << dist;
+        if( dist < 1 )
+        {
+          if( debug_mc == true) cout << " --> NEAR hit";
+          if( !pTrMCCluster->IsPrimary() ){
+            if( debug_mc == true ) {
+              cout << "  [CONVERTED!] PID: " << pTrMCCluster->GetPart() << endl; conversionId = pTrMCCluster->GetPart(); conversionIdContainer.push_back(conversionId);
+            }
+          }
+          else
+            if( debug_mc == true ) cout << " survived. " << endl;
+        }
+        else
+          if( debug_mc == true ) cout << " --> FAR hit" << endl;
+      }
+      // case : L7
+      else if( fabs( pTrMCCluster->GetXgl().z() - pParticle->TrCoo[5][2] ) < tolerance_distance )
+      {
+        if( debug_mc == true) cout << " -> L7 hit, Distance = ";
+        double dist = 0;
+        double deltax = 0;
+        double deltay = 0;
+        deltax = pParticle->TrCoo[5][0] - pTrMCCluster->GetXgl().x();
+        deltay = pParticle->TrCoo[5][1] - pTrMCCluster->GetXgl().y();
+        dist = sqrt( deltax * deltax + deltay * deltay );
+        if( debug_mc == true) cout << dist;
+        if( dist < 1 )
+        {
+          if( debug_mc == true) cout << " --> NEAR hit";
+          if( !pTrMCCluster->IsPrimary() ){
+            if( debug_mc == true ) {
+              cout << "  [CONVERTED!] PID: " << pTrMCCluster->GetPart() << endl; conversionId = pTrMCCluster->GetPart(); conversionIdContainer.push_back(conversionId);
+            }
+          }
+          else
+            if( debug_mc == true ) cout << " survived. " << endl;
+        }
+        else
+          if( debug_mc == true ) cout << " --> FAR hit" << endl;
+      }
+      // case : L8
+      else if( fabs( pTrMCCluster->GetXgl().z() - pParticle->TrCoo[6][2] ) < tolerance_distance )
+      {
+        if( debug_mc == true) cout << " -> L8 hit, Distance = ";
+        double dist = 0;
+        double deltax = 0;
+        double deltay = 0;
+        deltax = pParticle->TrCoo[6][0] - pTrMCCluster->GetXgl().x();
+        deltay = pParticle->TrCoo[6][1] - pTrMCCluster->GetXgl().y();
+        dist = sqrt( deltax * deltax + deltay * deltay );
+        if( debug_mc == true) cout << dist;
+        if( dist < 1 )
+        {
+          if( debug_mc == true) cout << " --> NEAR hit";
+          if( !pTrMCCluster->IsPrimary() ){
+            if( debug_mc == true ) {
+              cout << "  [CONVERTED!] PID: " << pTrMCCluster->GetPart() << endl; conversionId = pTrMCCluster->GetPart(); conversionIdContainer.push_back(conversionId);
+            }
+          }
+          else
+            if( debug_mc == true ) cout << " survived. " << endl;
+        }
+        else
+          if( debug_mc == true ) cout << " --> FAR hit" << endl;
+      }
+      // case : L9
+      else if( fabs( pTrMCCluster->GetXgl().z() == pParticle->TrCoo[8][2] ) < tolerance_distance )
+      {
+        if( debug_mc == true) cout << " -> L9 hit, Distance = ";
+        double dist = 0;
+        double deltax = 0;
+        double deltay = 0;
+        deltax = pParticle->TrCoo[8][0] - pTrMCCluster->GetXgl().x();
+        deltay = pParticle->TrCoo[8][1] - pTrMCCluster->GetXgl().y();
+        dist = sqrt( deltax * deltax + deltay * deltay );
+        if( debug_mc == true) cout << dist;
+        if( dist < 1 )
+        {
+          if( debug_mc == true) cout << " --> NEAR hit";
+          if( !pTrMCCluster->IsPrimary() ){
+            if( debug_mc == true ) {
+              cout << "  [CONVERTED!] PID: " << pTrMCCluster->GetPart() << endl; conversionId = pTrMCCluster->GetPart(); conversionIdContainer.push_back(conversionId);
+            }
+          }
+          else
+            if( debug_mc == true ) cout << " survived. " << endl;
+        }
+        else
+          if( debug_mc == true ) cout << " --> FAR hit" << endl;
+      }
+      else
+      {
+        if( debug_mc == true) cout << " can't find layer. " << endl;
+      }
+    }
+
+    conversionIdSet.clear();
+    pair<std::set<int>::iterator, bool> pr;
+    for( std::vector<int>::const_iterator it = conversionIdContainer.begin(); it != conversionIdContainer.end(); ++it )
+    {
+      conversionIdSet.insert(*it);
+    }
+    for( std::set<int>::const_iterator it = conversionIdSet.begin(); it != conversionIdSet.end(); ++it )
+      if( debug_mc == true ) cout << *it << endl;
+
+    RichMCClusterR* pRichMCCluster = NULL;
+    bool isPrimaryExistInRICH = false;
+    for( int j = 0 ; j < nRichMCCluster; j++ )
+    {
+      pRichMCCluster = pAMSEvent->pRichMCCluster(j);
+      if( pRichMCCluster->Id == pAMSEvent->GetPrimaryMC()->Particle )
+      {
+        isPrimaryExistInRICH = true;
+      }
+      if( pRichMCCluster->Id != 50 && pRichMCCluster->Id != pAMSEvent->GetPrimaryMC()->Particle )
+      {
+        if( debug_mc == true )
+        {
+          KNUOUT << "Event: " << e << " / iRichMCCluster: " << j << endl;
+          KNUOUT << "ID: " << pRichMCCluster->Id << endl;
+          KNUOUT << "Primary ID: " << pAMSEvent->GetPrimaryMC()->Particle << endl;
+          KNUOUT << "isPrimaryExistInRICH: " << isPrimaryExistInRICH << endl;
+        }
+      }
     }
     outTree->Fill();
   }

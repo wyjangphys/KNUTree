@@ -42,12 +42,12 @@ int main(int argc, char* argv[])
   //knuTree.LoopMultiPtl();
   if( knuTree.isMC == true )
   {
-    cout << " !!!!!!!!! THIS IS MC RUN !!!!!!!!!!!!!!!!!! " << endl;
+    KNUOUT << " !!!!!!!!! THIS IS MC RUN !!!!!!!!!!!!!!!!!! " << endl;
     knuTree.ProcessMC();
   }
   else
   {
-    cout << " !!!!!!!! This is ISS run!!!!!!" << endl;
+    KNUOUT << " !!!!!!!! This is ISS run!!!!!!" << endl;
     knuTree.Process();
   }
   knuTree.End();

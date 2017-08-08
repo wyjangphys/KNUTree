@@ -72,8 +72,8 @@ while read irun
 do
   # example submit command
   # $ /usr/bin/bsub -J /usr/bin/bsub -J 1305853512 -o Output/set_1105/log/1305853512.log -e Output/set_1105/err/1305853512.err -q 8nh -n 1 exec.sh FileList/set_1105/1305853512 Output/set_1105/1305853512.root
-  echo "/usr/bin/bsub -J $irun -o $LOGDIR/$irun.log -e $ERRDIR/$irun.err -q 8nh -n 1 $EXEC $LISTDIR/$1/$irun $OUTDIR/$1/$irun.root"
-  /usr/bin/bsub -J $irun -o $LOGDIR/${irun}.log -e $ERRDIR/${irun}.err -M 5000 -q 8nh -n 1 $EXEC $LISTDIR/$1/$irun $OUTDIR/$1/${irun}.root
+  echo "/usr/bin/bsub -J $irun -o $LOGDIR/$irun.log -e $ERRDIR/$irun.err -M 5000 -q 1nd -n 1 $EXEC $LISTDIR/$1/$irun $OUTDIR/$1/$irun.root"
+  /usr/bin/bsub -J $irun -o $LOGDIR/${irun}.log -e $ERRDIR/${irun}.err -M 5000 -q 1nd -n 1 $EXEC $LISTDIR/$1/$irun $OUTDIR/$1/${irun}.root
   #sleep 5
 done < "templist_$1"
 

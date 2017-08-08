@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS = -W -Wall -Wno-write-strings -Wno-extra -Wno-unused-parameter -Wno-unknown-pragmas -DAMS_ACQT_INTERFACE -D_PGTRACK_ -Wno-unused-variable -Wno-extra -Wno-unused-function
+CXXFLAGS = -W -Wall -Wno-write-strings -Wno-extra -Wno-unused-parameter -Wno-unknown-pragmas -DAMS_ACQT_INTERFACE -D_PGTRACK_ -Wno-unused-variable -Wno-extra -Wno-unused-function -g
 
 # AMS Global Environment
 CVMFS_AMS_OFFLINE = /cvmfs/ams.cern.ch/Offline

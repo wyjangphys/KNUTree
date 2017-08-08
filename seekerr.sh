@@ -32,7 +32,7 @@ echo "$ rm -rf outlist.tmp"
 rm -rf outlist.tmp
 echo "Done"
 
-# 에러파일 목록과 데이터파일 목록 간에 차이가 있는지 확인한다.
+# 표준에러출력파일 목록과 데이터파일 목록 간에 차이가 있는지 확인한다.
 echo "[5/12] Making error-list by : $ ls ${ERRDIR}/*.err | sed -e "s#${ERRDIR}/##g" -e "s#.err##g" > errlist.tmp"
 ls ${ERRDIR}/*.err | sed -e "s#${ERRDIR}/##g" -e "s#.err##g" > errlist.tmp
 echo "Done"

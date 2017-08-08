@@ -435,11 +435,11 @@ KNUTree::KNUTree(char* _name, int argc, char* argv[])
  */
 KNUTree::~KNUTree()
 {/*{{{*/
-  delete[] name;
-  delete pChain;
+  //delete[] name;
+  //delete pChain;
   //delete hEvtCounter;     // <<< This line causes segmentation violation. Don't know why.
-  delete pOutputTFile;
-  delete[] outputFileName;
+  //delete pOutputTFile;
+  //delete[] outputFileName;// <<< This line causes seg. viol?
   //delete outTree;         // <<< This line cuases segmentation violation. Don't know why.
 }/*}}}*/
 
@@ -496,8 +496,9 @@ bool KNUTree::RegisterFileToChain(int argc, char* argv[], AMSChain* amsChain)
   //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1362134524.00000001.root";
   //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1308865423.00000001.root";
   //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1307005643.00000001.root";   // Path of test run
-  char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1323051106.00000001.root";   // Path of test run
+  //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1323051106.00000001.root";   // Path of test run
   //char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/MC/AMS02/2014/d.B1030/d.pl1.0_520_GG_Blic/872728226.00000001.root";
+  char skirmishRunPath[] = "root://eosams.cern.ch//eos/ams/Data/AMS02/2014/ISS.B950/pass6/1319745123.00000001.root";
   char inputFileName[256];      // File path for single run. (Cat 3.)
 
   if( argc == 1 )
@@ -643,6 +644,16 @@ void KNUTree::Init()
   nBetaH              = 0;
   nEcalShower         = 0;
   nVertex             = 0;
+  survived_tof        = 0;
+  nAntiMCCluster      = 0;
+  nTrMCCluster        = 0;
+  nTofMCCluster       = 0;
+  nTofMCPmtHit        = 0;
+  nEcalMCHit          = 0;
+  nTrdMCCluster       = 0;
+  nRichMCCluster      = 0;
+  nMCTrack            = 0;
+  nMCEventg           = 0;
   particleID          = 0;
   trkID               = 0;
   parentID            = 0;
@@ -655,6 +666,9 @@ void KNUTree::Init()
   genMass             = 0;
   genCharge           = 0;
   genMomentum         = 0;
+  conversionId        = 0;
+  conversionIdContainer.clear();
+  conversionIdSet.clear();
   particleType        = 0;
   liveTime            = 0;
   utcTime             = 0;
@@ -1064,20 +1078,33 @@ void KNUTree::Init()
   outTree->Branch("nBeta",                                   &nBeta,                                   "nBeta/i");
   outTree->Branch("nBetaB",                                  &nBetaB,                                  "nBetaB/i");
   outTree->Branch("nBetaH",                                  &nBetaH,                                  "nBetaH/i");
-  outTree->Branch("nShower",                                 &nEcalShower,                                 "nShower/i");
+  outTree->Branch("nShower",                                 &nEcalShower,                             "nShower/i");
   outTree->Branch("nVertex",                                 &nVertex,                                 "nVertex/i");
   if( isMC == true )
   {
-    outTree->Branch("particleID",                            &particleID, "particleID/I");
-    outTree->Branch("trkID",                                 &trkID, "trkID/I");
-    outTree->Branch("parentID",                              &parentID, "parentID/I");
-    outTree->Branch("genMomentum",                           &genMomentum, "genMomentum/F");
-    outTree->Branch("genPosition",                           &genPosition, "genPosition[3]/F");
-    outTree->Branch("genDirCosine",                          &genDirCosine, "genDirCosine[3]/F");
-    outTree->Branch("genMass",                               &genMass, "genMass/F");
-    outTree->Branch("genCharge",                             &genCharge, "genCharge/F");
+    outTree->Branch("survived_tof",                          &survived_tof,                            "survived_tof/I");
+    outTree->Branch("nAntiMCCluster",                        &nAntiMCCluster,                          "nAntiMCCluster/i");
+    outTree->Branch("nTrMCCluster",                          &nTrMCCluster,                            "nTrMCCluster/i");
+    outTree->Branch("nTofMCCluster",                         &nTofMCCluster,                           "nTofMCCluster/i");
+    outTree->Branch("nTofMCPmtHit",                          &nTofMCPmtHit,                            "nTofMCPmtHit/i");
+    outTree->Branch("nEcalMCHit",                            &nEcalMCHit,                              "nEcalMCHit/i");
+    outTree->Branch("nTrdMCCluster",                         &nTrdMCCluster,                           "nTrdMCCluster/i");
+    outTree->Branch("nRichMCCluster",                        &nRichMCCluster,                          "nRichMCCluster/i");
+    outTree->Branch("nMCTrack",                              &nMCTrack,                                "nMCTrack/i");
+    outTree->Branch("nMCEventg",                             &nMCEventg,                               "nMCEventg/i");
+    outTree->Branch("particleID",                            &particleID,                              "particleID/I");
+    outTree->Branch("trkID",                                 &trkID,                                   "trkID/I");
+    outTree->Branch("parentID",                              &parentID,                                "parentID/I");
+    outTree->Branch("genMomentum",                           &genMomentum,                             "genMomentum/F");
+    outTree->Branch("genPosition",                           &genPosition,                             "genPosition[3]/F");
+    outTree->Branch("genDirCosine",                          &genDirCosine,                            "genDirCosine[3]/F");
+    outTree->Branch("genMass",                               &genMass,                                 "genMass/F");
+    outTree->Branch("genCharge",                             &genCharge,                               "genCharge/F");
+    outTree->Branch("conversionId",                          &conversionId,                            "conversionId/I");
+    outTree->Branch("conversionIdContainer",                 &conversionIdContainer);
+    outTree->Branch("conversionIdSet",                       &conversionIdSet);
   }
-  outTree->Branch("particleType",                            &particleType,                            "particleType/i");
+  outTree->Branch("particleType",                            &particleType,                            "particleType/I");
   if( isMC == false )
   {
     outTree->Branch("liveTime",                                &liveTime,                                "liveTime/F");
@@ -1145,12 +1172,29 @@ void KNUTree::Init()
   outTree->Branch("tofNUsedLayersForQ",                      &tofNUsedLayersForQ,                      "tofNUsedLayersForQ/I");
   outTree->Branch("tofBeta",                                 &tofBeta,                                 "tofBeta/F");
   outTree->Branch("tofInvBetaErr",                           &tofInvBetaErr,                           "tofInvBetaErr/F");
+  outTree->Branch("tofNormEBetaV",                           &tofNormEBetaV,                           "tofNormEBetaV/F");
+  outTree->Branch("tofBetaS",                                &tofBetaS,                                "tofBetaS/F");
+  outTree->Branch("tofBetaC",                                &tofBetaC,                                "tofBetaC/F");
+  outTree->Branch("tofEBetaCV",                              &tofEBetaCV,                              "tofEBetaCV/F");
   outTree->Branch("tofMass",                                 &tofMass,                                 "tofMass/F");
   outTree->Branch("tofMassError",                            &tofMassError,                            "tofMassError/F");
   outTree->Branch("isGoodBeta",                              &isGoodBeta,                              "isGoodBeta/I");
   outTree->Branch("isTkTofMatch",                            &isTkTofMatch,                            "isTkTofMatch/I");
+  outTree->Branch("tofChisqT",                               &tofChisqT,                               "tofChisqT/F");
+  outTree->Branch("tofChisqC",                               &tofChisqC,                               "tofChisqC/F");
   outTree->Branch("tofReducedChisqT",                        &tofReducedChisqT,                        "tofReducedChisqT/F");
   outTree->Branch("tofReducedChisqC",                        &tofReducedChisqC,                        "tofReducedChisqC/F");
+  outTree->Branch("tofSumHit",                               &tofSumHit,                               "tofSumHit/I");
+  outTree->Branch("tofNUsedClusterH",                        &tofNUsedClusterH,                        "tofNUsedClusterH/I");
+  outTree->Branch("tofPatternOnLayer",                       &tofPatternOnLayer,                       "tofPatternOnLayer[4]/I");
+  outTree->Branch("tofTimeOnLayer",                          &tofTimeOnLayer,                          "tofTimeOnLayer[4]/F");
+  outTree->Branch("tofETimeOnLayer",                         &tofETimeOnLayer,                         "tofETimeOnLayer[4]/F");
+  outTree->Branch("tofETCooOnLayer",                         &tofETCooOnLayer,                         "tofETCooOnLayer[4]/F");
+  outTree->Branch("tofTResidualOnLayer",                     &tofTResidualOnLayer,                     "tofTResidualOnLayer[4]/F");
+  outTree->Branch("tofT0",                                   &tofT0,                                   "tofT0/F");
+  outTree->Branch("tofTkTFLenOnLayer",                       &tofTkTFLenOnLayer,                       "tofTkTFLenOnLayer[4]/F");
+  outTree->Branch("tofCResidualXOnLayer",                    &tofCResidualXOnLayer,                    "tofCResidualXOnLayer[4]/F");
+  outTree->Branch("tofCResidualYOnLayer",                    &tofCResidualYOnLayer,                    "tofCResidualYOnLayer[4]/F");
   outTree->Branch("tofDepositedEnergyOnLayer",               &tofDepositedEnergyOnLayer,               "tofDepositedEnergyOnLayer[4]/F");
   outTree->Branch("tofEstimatedChargeOnLayer",               &tofEstimatedChargeOnLayer,               "tofEstimatedChargeOnLayer[4]/F");
   outTree->Branch("tofCharge",                               &tofCharge,                               "tofCharge/F");
@@ -1455,6 +1499,9 @@ void KNUTree::InitLoop()
   genMass = 0;
   genCharge = 0;
   genMomentum = 0;
+  conversionId = 0;
+  conversionIdContainer.clear();
+  conversionIdSet.clear();
   particleType = 0;
   liveTime = 0;
   utcTime = 0;

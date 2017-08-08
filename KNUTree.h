@@ -101,6 +101,18 @@ class KNUTree
     unsigned int  nBetaH;                     // Number of successfully estimated beta(v/c) values with algorithm H
     unsigned int  nEcalShower;                    // Number of the ECAL shower objects
     unsigned int  nVertex;                    // Number of vertices in this event
+
+    unsigned int  nAntiMCCluster;             // Number of MC ACC clusters
+    unsigned int  nTrMCCluster;               // Number of MC Tracker clusters
+    unsigned int  nTofMCCluster;              // Number of MC TOF clusters
+    unsigned int  nTofMCPmtHit;               // Number of MC TOF PMT hits
+    unsigned int  nEcalMCHit;                 // Number of MC ECAL hits
+    unsigned int  nTrdMCCluster;              // Number of MC TRD clusters
+    unsigned int  nRichMCCluster;             // Number of MC RICH clusters
+    unsigned int  nMCTrack;                   // Number of MC Tracks
+    unsigned int  nMCEventg;                  // Number of MCEventg objects
+    int           survived_tof;
+
     std::vector<int> iGoodParticleContainer;
     int           particleID;
     int           trkID;
@@ -110,6 +122,9 @@ class KNUTree
     float         genMass;
     float         genCharge;
     float         genMomentum;                // Rigidity of particle at the time of MC particle generation.
+    int           conversionId;               // If particle converted in detector, converted particle ID will be saved. 0 for no conversion in the detector.
+    std::vector<int> conversionIdContainer;
+    std::set<int>    conversionIdSet;
 
     unsigned int  particleType;               // Type of ParticleR
     float         liveTime;                   // Livetime fraction
@@ -138,7 +153,6 @@ class KNUTree
     int           isInShadow;                 // Value for check whether the AMS is in ISS solar panel shadow or not.
     float         zenithAngle;
     int           isInSAA;
-/*    unsigned int  ptlCharge;                  // ParticleR::Charge value
     float         ptlMomentum;                // ParticleR::Momentum value
     float         ptlTheta;                   // Direction of the incoming particle (polar angle)
     float         ptlPhi;                     // Direction of the incoming particle (azimuthal angle)
@@ -154,7 +168,6 @@ class KNUTree
     float         ptlRichPathBeta[2];
     float         ptlRichLength;              // Estimated pathlength of particle within RICH radiator (cm).
     int           ptlRichParticles;
-    */
     float         ptlCutOffStoermer;
     float         ptlCutOffDipole;
 
@@ -166,12 +179,21 @@ class KNUTree
     int           tofNUsedLayersForQ;
     float         tofBeta;
     float         tofInvBetaErr;
+    float         tofNormEBetaV;
+    float         tofBetaS;
+    float         tofBetaC;
+    float         tofEBetaCV;
     float         tofMass;
     float         tofMassError;
     int           isGoodBeta;
     int           isTkTofMatch;
+    float         tofChisqT;
+    float         tofChisqC;
     float         tofReducedChisqT;
     float         tofReducedChisqC;
+    int           tofSumHit;
+    int           tofNUsedClusterH;
+    int           tofPatternOnLayer[4];
     float         tofDepositedEnergyOnLayer[4];
     float         tofEstimatedChargeOnLayer[4];
     float         tofCharge;
@@ -182,6 +204,14 @@ class KNUTree
     float         tofAcUpperCharge;
     float         tofAcLowerCharge;
     float         tofChargeOnLayer[4];
+    float         tofTimeOnLayer[4];
+    float         tofETimeOnLayer[4];
+    float         tofETCooOnLayer[4];
+    float         tofTResidualOnLayer[4];
+    float         tofT0;
+    float         tofTkTFLenOnLayer[4];
+    float         tofCResidualXOnLayer[4];
+    float         tofCResidualYOnLayer[4];
     int           nTofLUsedForZ;
     float         probTOFZ;
     int           tofZ;

@@ -44,7 +44,7 @@ void KNUTree::Process()
   Analysis::EventFactory&              eventFactory = amsRootSupport.EventFactory();
   Analysis::AMSRootParticleFactory& particleFactory = amsRootSupport.ParticleFactory();
 
-  //for( unsigned long int e = 0; e < 10000; e++ )
+  //for( unsigned long int e = 0; e < 1000; e++ )
   for( unsigned long int e = 0; e < nEvents; e++ )
   {
     // Print out the working status briefly.
@@ -297,6 +297,10 @@ void KNUTree::Process()
     if(!pBetaH) { KNUERR << "Event: " << e << " NULL pBetaH pointer! This should not be happen! Exit the program!" << std::endl; exit(1); }
     tofBeta             = pBetaH->GetBeta();
     tofInvBetaErr       = pBetaH->GetEBetaV();
+    tofNormEBetaV       = pBetaH->GetNormEBetaV();
+    tofBetaS            = pBetaH->GetBetaS();
+    tofBetaC            = pBetaH->GetBetaC();
+    tofEBetaCV          = pBetaH->GetEBetaCV();
     tofMass             = pBetaH->GetMass();
     tofMassError        = pBetaH->GetEMass();
     tofNUsedHits        = pBetaH->NTofClusterH();
@@ -305,8 +309,24 @@ void KNUTree::Process()
     else isGoodBeta     = 0;
     if( pBetaH->IsTkTofMatch() == true ) isTkTofMatch = 1;
     else isTkTofMatch   = 0;
+    tofChisqT           = pBetaH->GetChi2T();
+    tofChisqC           = pBetaH->GetChi2C();
     tofReducedChisqT    = pBetaH->GetNormChi2T();
     tofReducedChisqC    = pBetaH->GetNormChi2C();
+    tofSumHit           = pBetaH->GetSumHit();
+    tofNUsedClusterH    = pBetaH->GetUseHit();
+    for( int k = 0; k < 4; k++ )
+    {
+      tofPatternOnLayer[k] = pBetaH->GetPattern(k);
+      tofTimeOnLayer[k] = pBetaH->GetTime(k);
+      tofETimeOnLayer[k] = pBetaH->GetETime(k);
+      tofETCooOnLayer[k] = pBetaH->GetETCoo(k);
+      tofTResidualOnLayer[k] = pBetaH->GetTResidual(k);
+      tofTkTFLenOnLayer[k] = pBetaH->GetTkTFLen(k);
+      tofCResidualXOnLayer[k] = pBetaH->GetCResidual(k, 0);
+      tofCResidualYOnLayer[k] = pBetaH->GetCResidual(k, 1);
+    }
+
     tofCharge = pBetaH->GetQ(tofNUsedLayersForQ, tofChargeRMS);
     tofChargeOnLayer[0] = pBetaH->GetQL(0);
     tofChargeOnLayer[1] = pBetaH->GetQL(1);
